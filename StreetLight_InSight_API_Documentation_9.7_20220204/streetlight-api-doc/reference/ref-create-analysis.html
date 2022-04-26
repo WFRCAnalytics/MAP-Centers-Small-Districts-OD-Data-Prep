@@ -1,0 +1,536 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="api-reference-create-an-analysis">API Reference: Create an Analysis</h1>
+<h2 id="description">Description</h2>
+<p>Analyses return metrics to understand travel patterns. An analysis is created with mandatory parameters and additional optional attributes for the analysis zones specified in the call. The Data API supports the following analyses in this release: Origin-Destination, Origin-Destination through Middle Filters, Zone Activity, Trips to or from Pre-set Geography, Segment Analysis, AADT, Top Routes between Origins and Destinations, and Top Routes for Zones. An Origin-Destination Analysis analyzes traffic from the Origin zones to the Destination zones. An Origin-Destination through Middle Filters analyzes traffic from the Origin zones, through the Middle Filter zones, and to the Destination zones. A Zone Activity Analysis analyzes traffic that starts, ends or passes through the given zones. A Trips to or from Pre-set Geography Analysis analyzes traffic that starts or passes through the given zones and ends at Pre-set Geographies or starts at Pre-set Geographies and ends or passes through the given zones. An AADT Analysis analyzes the Average Annual Daily Traffic in the given zones. A Top Routes between Origins and Destinations Analysis analyzes the routes between the given Origin and Destination zones. A Top Routes for Zones Analysis analyzes the traffic flows to and from the given zones.</p>
+<p>Analyses process asynchronously for some time after the server creates them. When their status becomes available, their metric results can be downloaded.</p>
+<p>Note: some analysis options are enabled for an organization's account only on request rather than by default. If you are looking for an analysis option in the list below and do not see it, contact your StreetLight Data representative.</p>
+<h2 id="http-request-method-and-url">HTTP request method and URL</h2>
+<pre><code>POST https://insight.streetlightdata.com/api/v2/analyses</code></pre>
+<h2 id="limitations">Limitations</h2>
+<p>There is currently a rate limit of 3 calls per 15 seconds.</p>
+<h2 id="authentication">Authentication</h2>
+<p>You must provide your API key in each request to identify your organization to StreetLight's servers. Provide your API key using a query parameter named <code>key</code>. The query parameter is the part of the request URL after the question mark. Alternatively, you can pass the key using the HTTP header <code>x-stl-key</code>. The server returns a <code>401 Unauthorized</code> status code if authentication fails.</p>
+<p>Contact your StreetLight Data representative to obtain an API key.</p>
+<h2 id="http-request-headers">HTTP request headers</h2>
+<pre><code>Content-Type: application/json</code></pre>
+<h2 id="http-request-body">HTTP request body</h2>
+<p>The HTTP request body must be in JSON format. At a minimum, it specifies the analysis type and at least one zone set. There are additional optional parameters to specify the Destination Zone Set (for Origin-Destination analysis type) and other analysis options.</p>
+<h3 id="request-body-example">Request-body example</h3>
+<p>The following example creates an Origin-Destination Analysis with GPS data. It has the same Zone Set as both the Origin zone set and the Destination zone set. It specifies the 12 months of 2016 as the date range, and specifies day parts and day types. This analysis does not include the trip attribute or traveler attribute analysis options.</p>
+<pre><code>{
+  &quot;insight_login_email&quot;:&quot;testemail@streetlightdata.com&quot;,
+  &quot;analysis_type&quot;:&quot;OD_Analysis&quot;,
+  &quot;travel_mode_type&quot;:&quot;Truck&quot;,
+  &quot;description&quot;:&quot;My O-D Analysis&quot;,
+  &quot;oz_sets&quot;:[{&quot;uuid&quot;:&quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;}],
+  &quot;dz_sets&quot;:[{&quot;uuid&quot;:&quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;}],
+  &quot;date_ranges&quot;: [{&quot;start_date&quot;: &quot;01/01/2016&quot;, &quot;end_date&quot;: &quot;12/31/2016&quot;}],
+  &quot;day_types&quot;:&quot;All Days|17,Weekday|14,Weekend Day|67&quot;,
+  &quot;day_parts&quot;:&quot;All Day|0023,Early AM|0005,Peak AM|0609,Mid-Day|1014,Peak PM|1518,Late PM|1923&quot;,
+  &quot;trip_attributes&quot;:false,
+  &quot;traveler_attributes&quot;:false
+}</code></pre>
+<h3 id="insight_login_email-request-body-property-required-string"><code>insight_login_email</code> request-body property (required, string)</h3>
+<p>The <code>insight_login_email</code> request-body property is a required login email associated with the specific organization to check for user access.</p>
+<h3 id="date_ranges-request-body-property-optional-array-of-date-ranges"><code>date_ranges</code> request-body property (optional, array of date ranges)</h3>
+<p>Default value for O-D Analysis Projects:</p>
+<pre><code>date_ranges: [{
+    start_date: &quot;01/01/2016&quot;,
+    end_date:   &quot;12/31/2016&quot;
+ }]</code></pre>
+<p>The <code>date_ranges</code> request-body property is a list of date ranges. Each date range is an object containing a pair of MM/DD/YYYY dates, with the <code>start_date</code> key containing the start of the date range, and the <code>end_date</code> key containing the end of the date range. Both <code>start_date</code> and <code>end_date</code> are inclusive.</p>
+<p><code>date_ranges</code> is supported for all <code>travel_mode_type</code> settings. If not provided, the analysis will use the default date ranges for the given <code>travel_mode_type</code>.</p>
+<h3 id="day_parts-request-body-property-optional-string"><code>day_parts</code> request-body property (optional, string)</h3>
+<p>Default value for O-D Analyses:</p>
+<pre><code>&quot;day_parts&quot;: &quot;All Day|0023,Early AM|0005,Peak AM|0609,Mid-Day|1014,Peak PM|1518,Late PM|1923&quot;</code></pre>
+<p><code>day_parts</code> is a comma-separated list of day parts in the analysis. Each day part has a name separated by the vertical bar from the start hour and end hour from 00 (midnight) to 23 (11 PM). For example, 'All Day|0023' ranges from midnight (00:00) to 11:59 PM. Analyses must define All Day as 0023 (midnight to midnight) and this day part will be added if it is not present.</p>
+<h3 id="day_types-request-body-property-optional-string"><code>day_types</code> request-body property (optional, string)</h3>
+<p>Default value for Origin-Destination Analyses:</p>
+<pre><code>&quot;day_types&quot;: &quot;Weekday|14,Weekend Day|67,All Days|17&quot;</code></pre>
+<p><code>day_types</code> is a comma-separated list of day types in the analysis. Each day type has a name separated by the vertical bar from the start day of week to the end day of week (1 for Monday through 7 for Sunday). Analyses must define All Day as &quot;17&quot; (Monday through Sunday) and this day type will be added if it is not present.</p>
+<h3 id="description-request-body-property-optional-string"><code>description</code> request-body property (optional, string)</h3>
+<p>The <code>description</code> request-body property allows the caller to provide more descriptive information about the analysis. It is optional and defaults to <code>null</code>.</p>
+<h3 id="dz_sets-request-body-property-optional-array-of-zone-set-objects"><code>dz_sets</code> request-body property (optional, array of Zone Set objects)</h3>
+<p>The <code>dz_sets</code> request-body property is required in the following analyses (and specifies the destination zone sets in the analysis): Origin-Destination, Origin-Destination through Middle Filters, and Top Routes Origin-Destination. It does not apply to the following analyses: Zone Activity, Segment Analysis, Trips to or from Pre-set Geography, or Top Routes for Zones. This property is an array of zone set objects in the same format as the <code>oz_sets</code> property.</p>
+<h3 id="enable_visualization-request-body-property-optional-boolean"><code>enable_visualization</code> request-body property (optional, boolean)</h3>
+<p>Default value <code>false</code>.</p>
+<p>This property controls whether the Analysis will generate a visualization in StreetLight InSight.</p>
+<h3 id="mfz_sets-request-body-property-optional-array-of-zone-set-objects"><code>mfz_sets</code> request-body property (optional, array of Zone Set objects)</h3>
+<p>The <code>mfz_sets</code> request-body property is required in Origin-Destination through Middle Filters Analysis and specifies the Middle Filter zone sets in the analysis. It does not apply to the following analyses: Origin-Destination, Zone Activity, Trips to or from to Pre-set Geography, AADT, Segment Analysis, Top Routes for Zones, or Top Routes between Origins and Destinations. This property is an array of zone set objects in the same format as the <code>oz_sets</code> property. However, all zones in the zone sets must be pass through.</p>
+<h3 id="geography_type-request-body-property-optional-string"><code>geography_type</code> request-body property (optional, string)</h3>
+<p>The <code>geography_type</code> request-body property is required in Trips to or from Pre-set Geography Analyses. It does not apply to the following analyses: Origin-Destination, Origin-Destination through Middle Filters, Segment Analysis, or Zone Activity. This property is a string of one of ('zip', 'taz', 'blkgrp', or 'da').</p>
+<h3 id="oz_sets-request-body-property-required-array-of-zone-set-objects"><code>oz_sets</code> request-body property (required, array of Zone Set objects)</h3>
+<p>In an Origin-Destination Analysis, Origin-Destination through Middle Filters Analysis, and Top Routes between Origins and Destinations Analysis, the <code>oz_sets</code> request-body property specifies the origin zone sets in the analysis. In a Zone Activity Analysis, Trips to or from Pre-set Geography Analysis, AADT Analysis, and Top Routes for Zones Analysis, it specifies the zones of analysis. In a Segment Analysis, the property specifies the zone set in the analysis. This property is required and must be an array of zone set objects. A zone set object identifies a Zone Set by either name or UUID (universally unique ID) and must have one of the following two forms:</p>
+<pre><code>{&quot;name&quot;: &quot;some name&quot;}</code></pre>
+<p>or</p>
+<pre><code>{&quot;uuid&quot;: &quot;server assigned UUID&quot;}</code></pre>
+<h3 id="analysis_name-request-body-parameter-optional-string"><code>analysis_name</code> request-body parameter (optional, string)</h3>
+<p>The <code>analysis_name</code> request-body property is optional. If specified, it must be a string that is case-insensitive unique in your organization's account and no longer than 50 characters. Subsequent <em>Query Analysis Status</em> and <em>Get Metrics</em> requests can refer to analyses by either their name or their UUID. If the caller does not specify this property, the server will assign a name identical to the UUID that it also assigns.</p>
+<h3 id="analysis_type-request-body-property-required-string"><code>analysis_type</code> request-body property (required, string)</h3>
+<p>The <code>analysis_type</code> request-body parameter must be a string with one of the following values:</p>
+<ul>
+<li><code>OD_Analysis</code></li>
+<li><code>OD_MF_Analysis</code></li>
+<li><code>Zone_Activity_Analysis</code></li>
+<li><code>OD_Preset_Geography</code></li>
+<li><code>Segment_Analysis</code></li>
+<li><code>AADT</code></li>
+<li><code>Top_Routes_OD</code></li>
+<li><code>Top_Routes_ZA</code></li>
+</ul>
+<h3 id="aadt_year-request-body-property-integer"><code>aadt_year</code> request-body property (integer)</h3>
+<p>The <code>aadt_year</code> request-body parameter is a required integer when creating an AADT Analysis. It must be one of the following values:</p>
+<ul>
+<li><code>2017</code></li>
+<li><code>2018</code></li>
+<li><code>2019</code></li>
+<li><code>2020</code></li>
+</ul>
+<h3 id="segment_types-request-body-property-array-of-string"><code>segment_types</code> request-body property (array of string)</h3>
+<p>The <code>segment_types</code> request-body parameter is a required array of strings when creating a Top Routes between Origins and Destinations Analysis or Top Routes for Zones Analysis.</p>
+<p>It must contain at least one of the following values:</p>
+<ul>
+<li><code>Motorway</code></li>
+<li><code>Trunk</code></li>
+<li><code>Primary</code></li>
+<li><code>Secondary</code></li>
+<li><code>Tertiary</code></li>
+<li><code>Residential</code></li>
+</ul>
+<h3 id="travel_mode_type-request-body-property-required-string"><code>travel_mode_type</code> request-body property (required, string)</h3>
+<p>The <code>travel_mode_type</code> is a required parameter except for the AADT Analysis type. The <code>travel_mode_type</code> request-body parameter must be a string with one of the following values:</p>
+<ul>
+<li><code>All_Vehicles</code></li>
+<li><code>Truck</code></li>
+<li><code>Bicycle</code></li>
+<li><code>Pedestrian</code></li>
+<li><code>Bus</code></li>
+<li><code>Rail</code></li>
+</ul>
+<p>Note that only certain combinations of analysis_type and travel_mode_type are supported. Here is the current set of supported combinations:</p>
+<table>
+<thead>
+<tr class="header">
+<th>analysis_type</th>
+<th>travel_mode_type</th>
+<th>supported</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>OD_Analysis</td>
+<td>Truck</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_MF_Analysis</td>
+<td>Truck</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Zone_Activity_Analysis</td>
+<td>Truck</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_Preset_Geography</td>
+<td>Truck</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Segment_Analysis</td>
+<td>Truck</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>Top_Routes_OD</td>
+<td>Truck</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Top_Routes_ZA</td>
+<td>Truck</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>AADT</td>
+<td>Truck</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>OD_Analysis</td>
+<td>All_Vehicles</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_MF_Analysis</td>
+<td>All_Vehicles</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Zone_Activity_Analysis</td>
+<td>All_Vehicles</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_Preset_Geography</td>
+<td>All_Vehicles</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Segment Analysis</td>
+<td>All_Vehicles</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>Top_Routes_OD</td>
+<td>All_Vehicles</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Top_Routes_ZA</td>
+<td>All_Vehicles</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>AADT</td>
+<td>All_Vehicles</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>OD_Analysis</td>
+<td>Bicycle</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_MF_Analysis</td>
+<td>Bicycle</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Zone_Activity_Analysis</td>
+<td>Bicycle</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_Preset_Geography</td>
+<td>Bicycle</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Segment Analysis</td>
+<td>Bicycle</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>Top_Routes_OD</td>
+<td>Bicycle</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>Top_Routes_ZA</td>
+<td>Bicycle</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>AADT</td>
+<td>Bicycle</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>OD_Analysis</td>
+<td>Pedestrian</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_MF_Analysis</td>
+<td>Pedestrian</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>Zone_Activity_Analysis</td>
+<td>Pedestrian</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_Preset_Geography</td>
+<td>Pedestrian</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Segment Analysis</td>
+<td>Pedestrian</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>Top_Routes_OD</td>
+<td>Pedestrian</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>Top_Routes_ZA</td>
+<td>Pedestrian</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>AADT</td>
+<td>Pedestrian</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>OD_Analysis</td>
+<td>Bus</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_MF_Analysis</td>
+<td>Bus</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Zone_Activity_Analysis</td>
+<td>Bus</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_Preset_Geography</td>
+<td>Bus</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>Segment Analysis</td>
+<td>Bus</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>Top_Routes_OD</td>
+<td>Bus</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>Top_Routes_ZA</td>
+<td>Bus</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>AADT</td>
+<td>Bus</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>OD_Analysis</td>
+<td>Rail</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_MF_Analysis</td>
+<td>Rail</td>
+<td>yes</td>
+</tr>
+<tr class="odd">
+<td>Zone_Activity_Analysis</td>
+<td>Rail</td>
+<td>yes</td>
+</tr>
+<tr class="even">
+<td>OD_Preset_Geography</td>
+<td>Rail</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>Segment Analysis</td>
+<td>Rail</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>Top_Routes_OD</td>
+<td>Rail</td>
+<td>no</td>
+</tr>
+<tr class="odd">
+<td>Top_Routes_ZA</td>
+<td>Rail</td>
+<td>no</td>
+</tr>
+<tr class="even">
+<td>AADT</td>
+<td>Rail</td>
+<td>no</td>
+</tr>
+</tbody>
+</table>
+<p>Also note that for analyses with travel_mode_type of Bicycle or Pedestrian, only date ranges containing full months are supported.</p>
+<h3 id="traveler_attributes-request-body-property-optional-boolean"><code>traveler_attributes</code> request-body property (optional, boolean)</h3>
+<p>Default value: <code>false</code> (only applies to the following analysis: Origin-Destination, Origin-Destination through Middle Filters, Trips to or from Pre-set Geography, and Zone Activity)</p>
+<p>This property controls whether the analysis results will include the add-on traveler attribute metrics. Traveler attribute metrics include traveler demographics and simple trip purpose.</p>
+<h3 id="trip_attributes-request-body-property-optional-boolean"><code>trip_attributes</code> request-body property (optional, boolean)</h3>
+<p>Default value: <code>false</code> (only applies to the following analysis: Origin-Destination, Origin-Destination through Middle Filters, Trips to or from Pre-set Geography, and Zone Activity)</p>
+<p>This property controls whether the analysis results will include the add-on trip attribute metrics: trip time distribution, trip length distribution, trip speed distribution, and trip circuity distribution. If you specify this property, you can also customize the following properties:</p>
+<ul>
+<li><code>trip_duration_bins</code></li>
+<li><code>trip_length_bins</code></li>
+<li><code>trip_speed_bins</code></li>
+<li><code>trip_circuity_bins</code></li>
+<li><code>speed_percentile_bins</code> (Available only for Origin-Destination, Origin-Destination through Middle Filters)</li>
+</ul>
+<p><em>For Segment Analysis</em>, you cannot enable trip attributes or traveler attributes. However, you can specify the following properties:</p>
+<ul>
+<li><code>trip_duration_bins</code></li>
+<li><code>trip_speed_bins</code></li>
+</ul>
+<h3 id="enable_speed_percentile-request-body-property-optional-boolean"><code>enable_speed_percentile</code> request-body property (optional, boolean)</h3>
+<p>Default value: <code>false</code> (only supported for the following analysis: Segment Analysis)</p>
+<p>This property when enabled will allow you to specify percentile values <code>speed_percentile_bins</code>, which takes a <code>String</code> containing a list of comma separated integers. Percentile values must be greater than 0 and less than 100.</p>
+<p>For example:</p>
+<pre><code>{
+  &quot;enable_speed_percentile&quot;: true,
+  &quot;speed_percentile_bins&quot;: &quot;10,20,30,40&quot;
+}</code></pre>
+<p>If the setting is enabled without any specific bins defined, then the default percentile values are used:</p>
+<pre><code>&quot;speed_percentile_bins&quot;: &quot;5,15,85,95&quot;</code></pre>
+<h3 id="vehicle_weight-request-body-property-optional-string"><code>vehicle_weight</code> request-body property (optional, string)</h3>
+<p>Default value: <code>null</code> (applies only to Truck Analyses)</p>
+<p>Allowed values: <code>null</code>, <code>Medium</code>, <code>Heavy</code>, <code>Medium,Heavy</code></p>
+<p>This property controls whether metric results for the analysis are broken down by vehicle weight class (medium duty, heavy duty) for commercial vehicles. If its value is <code>null</code>, commercial vehicle results are not broken down by vehicle weight class.</p>
+<h3 id="output_type-request-body-property-optional-string"><code>output_type</code> request-body property (optional, string)</h3>
+<p>Default value: <code>index</code></p>
+<p>The <code>output_type</code> request-body parameter must be a string with one of the following values:</p>
+<ul>
+<li><code>volume</code></li>
+<li><code>trip_counts</code></li>
+<li><code>aadt</code></li>
+<li><code>index</code></li>
+<li><code>zone_counts</code></li>
+</ul>
+<p><em>For Analyses using <code>Bus</code> or <code>Rail</code> travel types</em>, only default output type value <code>index</code> is allowed.</p>
+<h3 id="aadt_calibration_year-request-body-property-optional-integer"><code>aadt_calibration_year</code> request-body property (optional, integer)</h3>
+<p>The <code>aadt_calibration_year</code> request-body parameter is a required integer when creating an analysis with AADT output. It must be one of the following values:</p>
+<ul>
+<li><code>2017</code></li>
+<li><code>2018</code></li>
+<li><code>2019</code></li>
+<li><code>2020</code></li>
+</ul>
+<h3 id="az_sets-request-body-property-optional-array-of-zone-set-objects"><code>az_sets</code> request-body property (optional, array of zone set objects)</h3>
+<p>The <code>az_sets</code> request-body property is required when creating an Analysis with AADT output. This property is an array of Zone Set objects in the same format as the <code>oz_sets</code> property.</p>
+<h3 id="cz_sets-request-body-property-optional-array-of-zone-set-objects"><code>cz_sets</code> request-body property (optional, array of zone set objects)</h3>
+<p>The <code>cz_sets</code> request-body property is required when creating an Analysis with Zone Counts output. <code>cz_sets</code> must be Zone Sets with calibration values specified. This property is an array of Zone Set objects in the same format as the <code>oz_sets</code> property.</p>
+<h3 id="enable_home_work_locations-request-body-property-optional-boolean"><code>enable_home_work_locations</code> request-body property (optional, boolean)</h3>
+<p>Default value: <code>false</code> (applies only to Zone Activity Analysis)</p>
+<p>This property controls whether the Analysis results will include Home and Work Locations metrics.</p>
+<p>If you specify this, you need at least one of the following properties be set to <code>True</code>:</p>
+<ul>
+<li><code>hwl_enable_visitor</code></li>
+<li><code>hwl_enable_resident</code></li>
+<li><code>hwl_enable_worker</code></li>
+</ul>
+<p>This property is not supported for travel_mode_type of <code>Truck</code>. Home-Work locations are only supported for other modes of travel in Zone Activity Analyses.</p>
+<h3 id="zone_intersection_type-request-body-property-optional-string"><code>zone_intersection_type</code> request-body property (optional, string)</h3>
+<p>Default value: <code>trips_by_pass_through_setting</code> (applies only to Zone Activity Analysis)</p>
+<p>The <code>zone_intersection_type</code> (applies only to Zone Activity Analysis with Home and Work Locations metrics enabled) request-body parameter must be a string with one of the following two values:</p>
+<ul>
+<li><code>all_trips_for_zone</code></li>
+<li><code>trips_by_pass_through_setting</code></li>
+</ul>
+<h3 id="hwl_enable_visitor-request-body-property-optional-boolean"><code>hwl_enable_visitor</code> request-body property (optional, boolean)</h3>
+<p>Default value: <code>True</code> (applies only to Zone Activity Analysis)</p>
+<p>This property controls whether the Analysis results will include visiting trips that neither reside or work in the zone. It applies only to Zone Activity Analysis with Home and Work Locations metrics enabled.</p>
+<h3 id="hwl_enable_resident-request-body-property-optional-boolean"><code>hwl_enable_resident</code> request-body property (optional, boolean)</h3>
+<p>Default value: <code>False</code> (applies only to Zone Activity Analysis)</p>
+<p>This property controls whether the Analysis results will include trips that reside in the zone. It applies only to Zone Activity Analysis with Home and Work Locations metrics enabled.</p>
+<h3 id="hwl_enable_worker-request-body-property-optional-boolean"><code>hwl_enable_worker</code> request-body property (optional, boolean)</h3>
+<p>Default value: <code>False</code> (applies only to Zone Activity Analysis)</p>
+<p>This property controls whether the Analysis results will include trips that work in the zone. It applies only to Zone Activity Analysis with Home and Work Locations metrics enabled.</p>
+<h3 id="is_massive_queue-request-body-property-optional-boolean"><code>is_massive_queue</code> request-body property (optional, boolean)</h3>
+<p>Default value: <code>False</code>.</p>
+<p>The <code>is_massive_queue</code> property controls whether the Analysis will process alongside other high volume Analyses in order to optimize calculation time.</p>
+<h3 id="tags-request-body-property-optional-array-of-tag-names"><code>tags</code> request-body property (optional, array of Tag names)</h3>
+<p>The <code>tags</code> property is an array of Tag name strings created within an Organization to associate with the created Analysis.</p>
+<p>For example: &quot;tags&quot;: [&quot;My Tag&quot;, &quot;March2020&quot;], where &quot;My Tag&quot; and &quot;March2020&quot; are Tags that exist within the user's Organization.</p>
+<h3 id="enable_15min-request-body-property-optional-boolean"><code>enable_15min</code> request-body property (optional, boolean)</h3>
+<p>Default value: <code>False</code>(applies only to Origin-Destination, Zone Activity Analysis, and Segment Analysis)</p>
+<p>The <code>enable_15mins</code> property controls whether the Analysis will analyze in 15-minute day parts.</p>
+<p>This property cannot be set to <code>True</code> for analyses using <code>Bus</code> or <code>Rail</code> travel types.</p>
+<h3 id="enable_upsampling-request-body-property-optional-boolean"><code>enable_upsampling</code> request-body property (optional, boolean)</h3>
+<p>Default value: <code>True</code></p>
+<p>The <code>enable_upsampling</code> property controls whether the Analysis will process with upsampling if it meets the necessary thresholds. This setting only applies to analysis with <code>enable_15min</code> enabled.</p>
+<h3 id="unit_of_measurement-request-body-property-optional-string"><code>unit_of_measurement</code> request-body property (optional, string)</h3>
+<p>The <code>unit_of_measurement</code> property controls whether distances in Analysis results will be computed using miles or kilometers.</p>
+<p>If the parameter is set, it must be set to one of the following values:</p>
+<ul>
+<li><code>miles</code></li>
+<li><code>km</code></li>
+</ul>
+<p>By default, the unit will be set as per the organization level flag controlled by the organization administrators. Generally, it will be miles for US-based organizations and kilometers for Canada based organizations unless changed.</p>
+<h3 id="enable_completion_email-request-body-property-optional-boolean"><code>enable_completion_email</code> request-body property (optional, boolean)</h3>
+<p>Default value: <code>False</code></p>
+<p>The <code>enable_completion_email</code> property controls whether the Analysis will send an email upon its completion.</p>
+<h2 id="http-status-codes">HTTP status codes</h2>
+<p>Returns <code>201 Created</code> on success. Returns <code>400 Bad Request</code> with an error message in the response body on input error.</p>
+<h2 id="http-response-body">HTTP response body</h2>
+<p>The HTTP response body is in JSON format. The server assigns your newly created Analysis a UUID (universally unique ID) and returns that in the response body. It also assigns a name that is equal to the UUID unless you chose to specify an optional <code>analysis_name</code> in your request body.</p>
+<h3 id="response-body-example">Response-body example</h3>
+<pre><code>{
+  &quot;name&quot;: &quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;,
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;uuid&quot;: &quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;
+}</code></pre>
+<h3 id="name-response-body-property"><code>name</code> response-body property</h3>
+<p>The name of the analysis that was created. You can refer to the analysis by either name or UUID in subsequent <em>Query Analysis Status</em> or <em>Get Metrics</em> requests.</p>
+<h3 id="uuid-response-body-property"><code>uuid</code> response-body property</h3>
+<p>The UUID (universally unique ID) of the Analysis that was created, assigned by the server. You can refer to the Analysis by either name or UUID in subsequent <em>Query Analysis Status</em> or <em>Get Metrics</em> requests.</p>
+<h3 id="status-response-body-property"><code>status</code> response-body property</h3>
+<p>Will always be <code>success</code> when the request is successful.</p>
+<h2 id="example-request">Example request</h2>
+<p>This example request and response was generated using the <code>curl</code> command-line utility. See the <a href="../quickstart">Data API Quick Start</a> for instructions to rerun this example against the live server.</p>
+<pre><code>POST /api/v2/analyses?SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1 HTTP/1.1
+User-Agent: curl/7.35.0
+Host: insight.streetlightdata.com
+Accept: */*
+content-type: application/json
+Content-Length: 514
+
+{
+  &quot;insight_login_email&quot;:&quot;testemail@streetlightdata.com&quot;,
+  &quot;analysis_type&quot;:&quot;OD_Analysis&quot;,
+  &quot;travel_mode_type&quot;:&quot;Truck&quot;,
+  &quot;description&quot;:&quot;&quot;,
+  &quot;oz_sets&quot;:[{&quot;uuid&quot;:&quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;}],
+  &quot;dz_sets&quot;:[{&quot;uuid&quot;:&quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;}],
+  &quot;date_ranges&quot;: [{&quot;start_date&quot;: &quot;01/01/2016&quot;, &quot;end_date&quot;: &quot;12/31/2016&quot;}],
+  &quot;day_types&quot;:&quot;ALl Days|17,Weekday|14,Weekend Day|67&quot;,
+  &quot;day_parts&quot;:&quot;All Day|0023,Early AM|0005,Peak AM|0609,Mid-Day|1014,Peak PM|1518,Late PM|1923&quot;,
+  &quot;trip_attributes&quot;:false,
+  &quot;traveler_attributes&quot;:false
+}</code></pre>
+<h2 id="example-response">Example response</h2>
+<pre><code>HTTP/1.1 201 CREATED
+Date: Mon, 10 Apr 2017 16:31:06 GMT
+Content-Type: application/json
+Content-Length: 128
+Connection: keep-alive
+Set-Cookie: __cfduid=dca2d581c8f10c4dde207f0f0da2c5e2e1491841866; expires=Tue, 10-Apr-18 16:31:06 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Signature: 08a12cbd0e03edec92da03abb8ad3d0a17507b63
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+Server: cloudflare-nginx
+CF-RAY: 34d718306e7b11f5-SJC
+
+{
+  &quot;name&quot;: &quot;d91f40fa-afba-4f1a-9442-8cb65f6d5e62&quot;,
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;uuid&quot;: &quot;d91f40fa-afba-4f1a-9442-8cb65f6d5e62&quot;
+}</code></pre>
+<p>Copyright © 2021, StreetLight Data, Inc. All rights reserved.</p>
+</body>
+</html>

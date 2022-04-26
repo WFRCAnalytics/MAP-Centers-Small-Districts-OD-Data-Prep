@@ -1,0 +1,176 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="api-reference-create-a-zone-set">API Reference: Create a Zone Set</h1>
+<h2 id="description">Description</h2>
+<p>Create a zone set. Zone sets are analyzed by analyses. They specify a set of Zones as GeoJSON feature collections of either MultiPolygons or LineStrings.</p>
+<h2 id="http-request-method-and-url">HTTP request method and URL</h2>
+<pre><code>POST https://insight.streetlightdata.com/api/v2/zone_sets</code></pre>
+<h2 id="authentication">Authentication</h2>
+<p>You must provide your API key in each request to identify your organization to StreetLight's servers. Provide your API key using a query parameter named <code>key</code>. The query parameter is the part of the request URL after the question mark. Alternatively, you can pass the key using the HTTP header <code>x-stl-key</code>. The server returns a <code>401 Unauthorized</code> status code if authentication fails.</p>
+<p>Contact your StreetLight Data representative to obtain an API key.</p>
+<h2 id="http-request-headers">HTTP request headers</h2>
+<pre><code>Content-Type: application/json</code></pre>
+<h2 id="http-request-body">HTTP request body</h2>
+<p>The HTTP request body must be in JSON format. It has a required property <code>zones</code> and optional properties <code>zone_set_name</code>, <code>geom_type</code>, and <code>with_calibration</code>.</p>
+<h3 id="request-body-example">Request-body example</h3>
+<p>The following example creates a polygon zone set with two Zones. One zone has the ID 1 and is named &quot;Mission&quot;, and it is not a pass-through zone. The second zone has the ID 2 and is named &quot;Financial District&quot;, and it is a pass-through zone.</p>
+<pre><code>{
+&quot;insight_login_email&quot;:&quot;testemail@streetlightdata.com&quot;,
+&quot;geom_type&quot;:&quot;polygon&quot;,
+&quot;zones&quot;: {
+&quot;type&quot;: &quot;FeatureCollection&quot;,
+&quot;features&quot;: [
+{ &quot;type&quot;: &quot;Feature&quot;, &quot;properties&quot;: { &quot;id&quot;: 1, &quot;name&quot;: &quot;Mission&quot;, &quot;is_pass&quot;: 0, &quot;direction&quot;: null }, &quot;geometry&quot;: { &quot;type&quot;: &quot;MultiPolygon&quot;, &quot;coordinates&quot;: [ [ [ [ -122.426698258661972, 37.769562689936315 ], [ -122.423394859041892, 37.772083876030344 ], [ -122.42225575572462, 37.770418101996292 ], [ -122.411206453547067, 37.769427623969634 ], [ -122.406991771273155, 37.769067446852375 ], [ -122.404656609472752, 37.767716767038294 ], [ -122.405169205965521, 37.762628984940662 ], [ -122.406593085112107, 37.760557752167074 ], [ -122.405795712790038, 37.758441432691242 ], [ -122.403232730326167, 37.75722564731312 ], [ -122.402549268335804, 37.751821915004783 ], [ -122.403346640657901, 37.749390106706535 ], [ -122.407561322931784, 37.748399347080543 ], [ -122.424875693354338, 37.74781389197571 ], [ -122.426698258661972, 37.769562689936315 ] ] ] ] } },
+{ &quot;type&quot;: &quot;Feature&quot;, &quot;properties&quot;: { &quot;id&quot;: 2, &quot;name&quot;: &quot;Financial District&quot;, &quot;is_pass&quot;: 1, &quot;direction&quot;: null }, &quot;geometry&quot;: { &quot;type&quot;: &quot;MultiPolygon&quot;, &quot;coordinates&quot;: [ [ [ [ -122.405425504211919, 37.798033588378779 ], [ -122.398476973976571, 37.798933675051543 ], [ -122.396654408668923, 37.799698740100226 ], [ -122.397024617247041, 37.79929370664977 ], [ -122.396768319000643, 37.798911173018389 ], [ -122.395828558763895, 37.797898574431919 ], [ -122.393607307295227, 37.799113691070012 ], [ -122.392610591892605, 37.797876072083447 ], [ -122.394233814119715, 37.79690846455324 ], [ -122.393037755636598, 37.795670808599994 ], [ -122.3913575782436, 37.796278387822021 ], [ -122.390987369665496, 37.795693311702443 ], [ -122.392439726395011, 37.794500642185817 ], [ -122.389278714689581, 37.791462623416393 ], [ -122.401182344355107, 37.781965196242638 ], [ -122.405824190372982, 37.785701296639232 ], [ -122.406222876534017, 37.785723802695827 ], [ -122.407134159187834, 37.790337399578668 ], [ -122.404058580231194, 37.790764986655553 ], [ -122.405425504211919, 37.798033588378779 ] ] ] ] } }
+]
+}}</code></pre>
+<p>The following example creates a line zone set including one zone. The zone has the ID 10 and is named &quot;Market Street&quot;, it is a pass-through zone with direction 46.0. The road type and gate details (gate latitude, gate longitude and gate size) are also specified.</p>
+<pre><code>{
+&quot;insight_login_email&quot;:&quot;testemail@streetlightdata.com&quot;,
+&quot;geom_type&quot;:&quot;line&quot;,
+&quot;zones&quot;: {
+&quot;type&quot;: &quot;FeatureCollection&quot;,
+&quot;features&quot;: [
+{ &quot;type&quot;: &quot;Feature&quot;, &quot;properties&quot;: { &quot;id&quot;: 10, &quot;name&quot;: &quot;Market Street&quot;, &quot;is_pass&quot;: 1, &quot;direction&quot;: 46.0, &quot;gate_lat&quot;: 34.40, &quot;gate_lng&quot;: 34.40, &quot;gate_size&quot;: 50 }, &quot;geometry&quot;: { &quot;type&quot;: &quot;LineString&quot;, &quot;coordinates&quot;: [ [ -118.485925533,34.0397217471],[-118.484005071,34.0412686707] ] } }
+]
+}}</code></pre>
+<h3 id="insight_login_email-request-body-propertyrequired-string"><code>insight_login_email</code> request-body property(required, string)</h3>
+<p>The <code>insight_login_email</code> request-body property is a required login email associated with the specific organization to check for user access.</p>
+<h3 id="zones-request-body-property-required-geojson-feature-collection-object"><code>zones</code> request-body property (required, GeoJSON feature collection object)</h3>
+<p>The <code>zones</code> request-body property must be a GeoJSON feature collection where the features are either all MultiPolygons or all LineStrings. Refer to the GeoJSON spec at <a href="http://geojson.org/" class="uri">http://geojson.org/</a> for details on the GeoJSON format.</p>
+<p>Each feature in the GeoJSON feature collection must have the following five properties (optional properties can be omitted):</p>
+<ul>
+<li><code>name</code> (required): Zone Name is required, and will be used to reference that zone in the metric results. It must be case-insensitive unique within the zone set and must be no longer than 50 characters.</li>
+<li><code>id</code> (optional): Zone ID as non-null can be optional. If non-null, it must be an integer greater than zero, and it will be used in addition to the Zone Name to reference that zone in the metric results. It must be unique within the zone set.</li>
+<li><code>is_pass</code> (optional): null, 0, or 1. <code>is_pass</code> is always set to 1 for Line Zones. If 1, the zone will be analyzed in terms of traffic that passes through the Zone. Otherwise, depending on analysis type, the zone will be analyzed in terms of traffic that starts or stops in the zone.</li>
+<li><code>direction</code> (optional): integer from 0 to 359. This can be non-null only for pass-through zones. If specified, traffic passing through the zone is included in analyses only if it is traveling in that direction.</li>
+<li><code>is_bidi</code> (optional): null, 0, or 1. Default value is 0. If <code>is_bidi</code> is set, <code>direction</code> is defined and <code>is_pass</code> is set, then traffic going to and from the specified <code>direction</code> will be captured in the zone's metric values.</li>
+</ul>
+<p>Features with <code>LineString</code> geometry can define the following optional properties:</p>
+<ul>
+<li><code>road_type</code> (optional): Primary, Secondary, Local, or Ramp. Road type describe the type of the road segment.</li>
+<li><code>gate_lat</code> (optional): float number from -90 to 90. Latitude of line segemnt custom gate.</li>
+<li><code>gate_lng</code> (optional): float number from -180 to 180. Longitude of line segment custom gate.</li>
+<li><code>gate_size</code> (optional): integer. Size of line segment custom gate.</li>
+</ul>
+<p>Features may also contain properties to specify Zone Calibration settings. If <code>with_calibration</code> is set to <code>true</code> in the Zone Set parameters, the following parameters can be added to a pass-through (<code>is_pass</code> enabled) Zone's feature properties in order to specify Zone Calibration settings:</p>
+<ul>
+<li><code>calibration_type</code> (optional): String with value <code>ADT</code>, <code>AADT</code>, <code>AWDT</code>, or <code>AADWT</code>. Specify the type of calibration for this Zone.</li>
+<li><code>calibration_value</code> (optional): Integer with a value between 0 and 1,000,000. Required if <code>calibration_type</code> is set. Specifies the traffic at the Zone based on the <code>calibration_type</code>.</li>
+<li><code>personal_traffic_ratio</code> (optional): Float number between 0.000 and 1.000. The recommended value is 0.96. Required if <code>calibration_type</code> is set. Specifies the ratio of traffic for this Zone that is due to personal vehicles.</li>
+<li><code>medium_commercial_ratio</code> (optional): Float number between 0.000 and 1.000. The recommended value is 0.02. Required if <code>calibration_type</code> is set. Specifies the ratio of traffic for this Zone that due is to medium-duty vehicles.</li>
+<li><code>heavy_commercial_ratio</code> (optional): Float number between 0.000 and 1.000. The recommended value is 0.02. Required if <code>calibration_type</code> is set. Specifies the ratio of traffic for this Zone that due is to heavy-duty vehicles.</li>
+</ul>
+<p>Note that if specified, the sum of <code>personal_traffic_ratio</code>, <code>medium_commercial_ratio</code> and <code>heavy_commercial_ratio</code> should be 1.0. e.g { ... &quot;personal_traffic_ratio&quot;: 0.96, &quot;medium_commercial_ratio&quot;: 0.02, &quot;heavy_commercial_ratio&quot;: 0.02, }</p>
+<p>The following properties can be set to specify Pedestrian Calibration:</p>
+<ul>
+<li><code>has_pedestrian_calibration</code> (optional): Boolean. Set to <code>true</code> to enable Pedestrian Calibration.</li>
+<li><code>pedestrian_calibration_value</code> (optional): Integer with a value between 0 and 999,999. Required if <code>has_pedestrian_calibration</code> is set. Specifies the pedestrian traffic at the Zone.</li>
+</ul>
+<p>The following properties can be set to specify Bicycle Calibration:</p>
+<ul>
+<li><code>has_bike_calibration</code> (optional): Boolean. Set to <code>true</code> to enable Bicycle Calibration.</li>
+<li><code>bike_calibration_value</code> (optional): Integer with a value between 0 and 10,000. Required if <code>has_bike_calibration</code> is set. Specifies the bicycle traffic at the Zone.</li>
+</ul>
+<h3 id="zone_set_name-request-body-property-optional-string"><code>zone_set_name</code> request-body property (optional, string)</h3>
+<p>The <code>zone_set_name</code> request-body property is optional. If specified, it must be a string that is case-insensitive unique in your organization's account and no longer than 50 characters. Subsequent Create Analysis requests can refer to zone sets by either their name or their UUID. If the caller does not specify this property, the server will assign a name identical to the UUID that it also assigns.</p>
+<h3 id="geom_type-request-body-property-optional-string"><code>geom_type</code> request-body property (optional, string)</h3>
+<p>The <code>geom_type</code> request-body property is optional and represents the zone set geometry type. The default value is <code>polygon</code>. If specified, it must be a string with possible values: <code>polygon</code> or <code>line</code> and the <code>zones</code> feature collection must have the corresponding GeoJSON geometry type of MultiPolygon or LineString.</p>
+<h3 id="with_calibration-request-body-property-optional-boolean"><code>with_calibration</code> request-body property (optional, Boolean)</h3>
+<p>The <code>with_calibration</code> request-body property is optional. The default value is <code>false</code>. Set <code>with_calibration</code> to <code>true</code> to indicate that the Zone Set contains Calibration Zones.</p>
+<h2 id="http-status-codes">HTTP status codes</h2>
+<p>Returns <code>201 Created</code> if successful. Returns <code>400 Bad Request</code> with an error message in the response body on input error.</p>
+<h2 id="http-response-body">HTTP response body</h2>
+<p>The HTTP response body is in JSON format. The server assigns your newly created zone set a UUID (universally unique ID) and returns that in the response body. It also assigns a name that is equal to the UUID unless you chose to specify an optional <code>zone_set_name</code> in your request body.</p>
+<h3 id="response-body-example">Response-body example</h3>
+<pre><code>{
+  &quot;name&quot;: &quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;,
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;uuid&quot;: &quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;
+}</code></pre>
+<h3 id="name-response-body-property"><code>name</code> response-body property</h3>
+<p>The name of the zone set that was created. You can refer to the zone set by either name or UUID in subsequent Create Analysis requests.</p>
+<h3 id="uuid-response-body-property"><code>uuid</code> response-body property</h3>
+<p>The UUID (universally unique ID) of the zone set that was created, assigned by the server. You can refer to the zone set by either name or UUID in subsequent Create Analysis requests.</p>
+<h3 id="status-response-body-property"><code>status</code> response-body property</h3>
+<p>Will always be <code>success</code> when the is request successful.</p>
+<h2 id="example-request">Example request</h2>
+<p>This example request and response was generated using the <code>curl</code> command-line utility. See the <a href="../quickstart">Data API Quick Start</a> for instructions to rerun this example against the live server.</p>
+<pre><code>POST /api/v2/zone_sets?SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1 HTTP/1.1
+User-Agent: curl/7.35.0
+Host: insight.streetlightdata.com
+Accept: */*
+Content-Type: application/json
+Content-Length: 2004
+Expect: 100-continue
+
+{
+    &quot;geom_type&quot;:&quot;polygon&quot;,
+    &quot;with_calibration&quot;: 1,
+    &quot;zones&quot;:{
+        &quot;type&quot;:&quot;FeatureCollection&quot;,
+        &quot;features&quot;:[
+            {
+                &quot;type&quot;:&quot;Feature&quot;,
+                &quot;properties&quot;:{
+                    &quot;id&quot;:1,
+                    &quot;name&quot;:&quot;Mission&quot;,
+                    &quot;is_pass&quot;:0,
+                    &quot;direction&quot;:null
+                },
+                &quot;geometry&quot;:{
+                    &quot;type&quot;:&quot;MultiPolygon&quot;,
+                    &quot;coordinates&quot;: [ [ [ [ -122.426698258661972, 37.769562689936315 ], [ -122.423394859041892, 37.772083876030344 ], [ -122.42225575572462, 37.770418101996292 ], [ -122.411206453547067, 37.769427623969634 ], [ -122.406991771273155, 37.769067446852375 ], [ -122.404656609472752, 37.767716767038294 ], [ -122.405169205965521, 37.762628984940662 ], [ -122.406593085112107, 37.760557752167074 ], [ -122.405795712790038, 37.758441432691242 ], [ -122.403232730326167, 37.75722564731312 ], [ -122.402549268335804, 37.751821915004783 ], [ -122.403346640657901, 37.749390106706535 ], [ -122.407561322931784, 37.748399347080543 ], [ -122.424875693354338, 37.74781389197571 ], [ -122.426698258661972, 37.769562689936315 ] ] ] ]
+                }
+            },
+            {
+                &quot;type&quot;:&quot;Feature&quot;,
+                &quot;properties&quot;:{
+                    &quot;id&quot;:2,
+                    &quot;name&quot;:&quot;Financial District&quot;,
+                    &quot;is_pass&quot;:1,
+                    &quot;direction&quot;: 0.0,
+                    &quot;calibration_type&quot;: &quot;AADT&quot;,
+                    &quot;calibration_value&quot;: 10000,
+                    &quot;personal_traffic_ratio&quot;: 0.96,
+                    &quot;medium_commercial_ratio&quot;: 0.02,
+                    &quot;heavy_commercial_ratio&quot;: 0.02,
+                },
+                &quot;geometry&quot;:{
+                    &quot;type&quot;:&quot;MultiPolygon&quot;,
+                    &quot;coordinates&quot;:[ [ [ [ -122.405425504211919, 37.798033588378779 ], [ -122.398476973976571, 37.798933675051543 ], [ -122.396654408668923, 37.799698740100226 ], [ -122.397024617247041, 37.79929370664977 ], [ -122.396768319000643, 37.798911173018389 ], [ -122.395828558763895, 37.797898574431919 ], [ -122.393607307295227, 37.799113691070012 ], [ -122.392610591892605, 37.797876072083447 ], [ -122.394233814119715, 37.79690846455324 ], [ -122.393037755636598, 37.795670808599994 ], [ -122.3913575782436, 37.796278387822021 ], [ -122.390987369665496, 37.795693311702443 ], [ -122.392439726395011, 37.794500642185817 ], [ -122.389278714689581, 37.791462623416393 ], [ -122.401182344355107, 37.781965196242638 ], [ -122.405824190372982, 37.785701296639232 ], [ -122.406222876534017, 37.785723802695827 ], [ -122.407134159187834, 37.790337399578668 ], [ -122.404058580231194, 37.790764986655553 ], [ -122.405425504211919, 37.798033588378779 ] ] ] ]
+                }
+            }
+        ]
+    }
+}</code></pre>
+<h2 id="example-response">Example response</h2>
+<pre><code>HTTP/1.1 201 CREATED
+Date: Fri, 07 Apr 2017 04:12:20 GMT
+Content-Type: application/json
+Content-Length: 128
+Connection: keep-alive
+Set-Cookie: __cfduid=de80e418234dff51a8a3b431f3cf392081491538339; expires=Sat, 07-Apr-18 04:12:19 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Signature: 08a12cbd0e03edec92da03abb8ad3d0a17507b63
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+Server: cloudflare-nginx
+CF-RAY: 34ba25df1cca6bf2-SJC
+
+{
+  &quot;name&quot;: &quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;,
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;uuid&quot;: &quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;
+}</code></pre>
+<p>Copyright © 2021, StreetLight Data, Inc. All rights reserved.</p>
+</body>
+</html>

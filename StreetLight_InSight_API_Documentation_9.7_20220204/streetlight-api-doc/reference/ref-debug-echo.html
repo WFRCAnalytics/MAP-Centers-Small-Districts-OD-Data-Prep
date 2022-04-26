@@ -1,0 +1,68 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="api-reference-echo-a-message-for-debugging">API Reference: Echo a Message for Debugging</h1>
+<h2 id="description">Description</h2>
+<p>Echo back a message. This endpoint is provided solely for debugging connectivity and authentication to the API server. It is not necessary to use it in production to create analyses and get metrics.</p>
+<h2 id="http-request-method-and-url">HTTP request method and URL</h2>
+<pre><code>POST https://insight.streetlightdata.com/api/v2/debug/echo</code></pre>
+<h2 id="authentication">Authentication</h2>
+<p>You must provide your API key in each request to identify your organization to StreetLight's servers. Provide your API key using a query parameter named <code>key</code>. The query parameter is the part of the request URL after the question mark. Alternatively, you can pass the key using the HTTP header <code>x-stl-key</code>. The server returns a <code>401 Unauthorized</code> status code if authentication fails.</p>
+<p>Contact your StreetLight Data representative to obtain an API key.</p>
+<h2 id="http-request-headers">HTTP request headers</h2>
+<pre><code>Content-Type: application/json</code></pre>
+<h2 id="http-request-body">HTTP request body</h2>
+<p>The HTTP request body must be in JSON format. It has one required property, <code>message</code>.</p>
+<h3 id="request-body-example">Request-body example</h3>
+<pre><code>{&quot;message&quot;: &quot;hello world&quot;}</code></pre>
+<h2 id="http-status-codes">HTTP status codes</h2>
+<p>Returns <code>200 OK</code> if successful. It can return other status codes on error, including <code>401 Unauthorized</code> if the API key was not authenticated successfully or <code>403 Forbidden</code> if the API key was authenticated but the organization is not allowed to use the server.</p>
+<h2 id="http-response-body">HTTP response body</h2>
+<p>The HTTP response body is in JSON format. It echoes back the input message.</p>
+<h3 id="response-body-example">Response-body example</h3>
+<pre><code>{
+  &quot;message&quot;: &quot;hello world&quot;,
+  &quot;status&quot;: &quot;success&quot;
+}</code></pre>
+<h3 id="message-response-body-property"><code>message</code> response-body property</h3>
+<p>Contains the same value as the <code>message</code> request-body property did.</p>
+<h3 id="status-response-body-property"><code>status</code> response-body property</h3>
+<p>Will always be <code>success</code> when the request is successful.</p>
+<h2 id="example-request">Example request</h2>
+<p>This example request and response was generated using the <code>curl</code> command-line utility. See the <a href="../quickstart">Data API Quick Start</a> for instructions to rerun this example against the live server.</p>
+<pre><code>POST /api/v2/debug/echo?key=SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1 HTTP/1.1
+User-Agent: curl/7.35.0
+Host: insight.streetlightdata.com
+Accept: */*
+content-type: application/json
+Content-Length: 26
+
+{&quot;message&quot;: &quot;hello world&quot;}</code></pre>
+<h2 id="example-response">Example response</h2>
+<pre><code>HTTP/1.1 200 OK
+Date: Mon, 10 Apr 2017 16:57:19 GMT
+Content-Type: application/json
+Content-Length: 55
+Connection: keep-alive
+Set-Cookie: __cfduid=dac4cf29a49dccfe77466b211a67d2ae71491843439; expires=Tue, 10-Apr-18 16:57:19 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Signature: 08a12cbd0e03edec92da03abb8ad3d0a17507b63
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+Server: cloudflare-nginx
+CF-RAY: 34d73e96aaa76e32-SJC
+
+{
+  &quot;message&quot;: &quot;hello world&quot;,
+  &quot;status&quot;: &quot;success&quot;
+}</code></pre>
+<p>Copyright © 2021, StreetLight Data, Inc. All rights reserved.</p>
+</body>
+</html>

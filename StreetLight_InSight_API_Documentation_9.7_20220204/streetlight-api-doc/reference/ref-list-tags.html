@@ -1,0 +1,65 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="api-reference-list-tags-within-an-organization">API Reference: List Tags within an Organization</h1>
+<h2 id="description">Description</h2>
+<p>Retrieve a list of Tags that are available in user's Organization.</p>
+<h2 id="http-request-method-and-url">HTTP request method and URL</h2>
+<pre><code>GET https://insight.streetlightdata.com/api/v2/tags</code></pre>
+<h2 id="authentication">Authentication</h2>
+<p>You must provide your API key in each request to identify your organization to StreetLight's servers. Provide your API key using a query parameter named <code>key</code>. The query parameter is the part of the request URL after the question mark. Alternatively, you can pass the key using the HTTP header <code>x-stl-key</code>. The server returns a <code>401 Unauthorized</code> status code if authentication fails.</p>
+<p>Contact your StreetLight Data representative to obtain an API key.</p>
+<h2 id="http-status-codes">HTTP status codes</h2>
+<p>Returns <code>200 OK</code> on success. Can return other status codes on error.</p>
+<h2 id="http-response-body">HTTP response body</h2>
+<p>The HTTP response body is in json format. It includes the request <code>status</code> and an array of Tag objects <code>tags</code> available in an Organization.</p>
+<h3 id="response-body-example">Response-body example</h3>
+<pre><code>{
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;tags&quot;: [{
+    &quot;tag_name&quot;:&quot;San Francisco&quot;,
+    &quot;analysis_num&quot;: 2,
+    &quot;created_by&quot;: &quot;user1@sample_company.com&quot;,
+    &quot;created_date&quot;: &quot;2020-05-20T05:11:40.962576+00:00&quot;,
+  }]
+}</code></pre>
+<h3 id="status-response-body-property"><code>status</code> response-body property</h3>
+<p>Will always be <code>success</code> when the request is successful.</p>
+<h3 id="tags-response-body-property"><code>tags</code> response-body property</h3>
+<p>The <code>tags</code> property contains an array of Tag objects that are currently available in an Organization. It includes the following information: - <code>tag_name</code>: name of the tag - <code>created_by</code>: creator of the tag - <code>created_date</code>: created date of the tag - <code>analysis_num</code>: number of analysis tagged by this tag</p>
+<h2 id="example-request">Example request</h2>
+<p>This example request and response was generated using the <code>curl</code> command-line utility. See the <a href="../quickstart">Data API Quick Start</a> for instructions to rerun this example against the live server.</p>
+<pre><code>GET /api/v2/tags?key=SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1 HTTP/1.1</code></pre>
+<h2 id="example-response">Example response</h2>
+<pre><code>HTTP/1.1 200 OK
+Date: Mon, 10 Apr 2017 18:02:53 GMT
+Content-Type: application/json
+Content-Length: 128
+Connection: keep-alive
+Set-Cookie: __cfduid=d496fa281a93825a191898d095bf65f3f1491847373; expires=Tue, 10-Apr-18 18:02:53 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Last-Modified: Fri, 07 Apr 2017 04:20:06 GMT
+Cache-Control: public, max-age=0, no-cache
+Expires: Mon, 10 Apr 2017 18:02:53 GMT
+ETag: &quot;58e71376-235f&quot;
+Accept-Ranges: bytes
+Server: cloudflare-nginx
+CF-RAY: 34d79ea33c17515e-SJC
+{
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;tags&quot;: [{
+    &quot;tag_name&quot;:&quot;San Francisco&quot;,
+    &quot;analysis_num&quot;: 2,
+    &quot;created_by&quot;: &quot;user1@sample_company.com&quot;,
+    &quot;created_date&quot;: &quot;2020-05-20T05:11:40.962576+00:00&quot;,
+  }]
+}</code></pre>
+<p>Copyright © 2021, StreetLight Data, Inc. All rights reserved.</p>
+</body>
+</html>

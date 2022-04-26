@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="api-reference-query-analysis-status">API Reference: Query Analysis Status</h1>
+<h2 id="description">Description</h2>
+<p>This query provides the status when processing an array of analyses. Analyses process asynchronously after the server creates them. When their status becomes <code>Available</code>, their metrics can be downloaded in a subsequent <em>Get Metrics</em> call.</p>
+<p>Note: If status needs to be queried for a large number of analyses, please use the array input of this endpoint to do so with fewer server calls to reduce resource consumption. StreetLight reserves the right to rate-limit this endpoint or bill additionally per API call if request volume is high.</p>
+<h2 id="http-request-method-and-url">HTTP request method and URL</h2>
+<pre><code>POST https://insight.streetlightdata.com/api/v2/analyses/status</code></pre>
+<h2 id="limitations">Limitations</h2>
+<p>There is currently a rate limit of 1 call per second.</p>
+<h2 id="authentication">Authentication</h2>
+<p>You must provide your API key in each request to identify your organization to StreetLight's servers. Provide your API key using a query parameter named <code>key</code>. The query parameter is the part of the request URL after the question mark. Alternatively, you can pass the key using the HTTP header <code>x-stl-key</code>. The server returns a <code>401 Unauthorized</code> status code if authentication fails.</p>
+<p>Contact your StreetLight Data representative to obtain an API key.</p>
+<h2 id="http-request-headers">HTTP request headers</h2>
+<pre><code>Content-Type: application/json</code></pre>
+<h2 id="http-request-body">HTTP request body</h2>
+<p>The HTTP request body must be in JSON format. It has one required property, <code>analyses</code>.</p>
+<h3 id="request-body-example">Request-body example</h3>
+<pre><code>{
+    &quot;analyses&quot;:[{&quot;uuid&quot;:&quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;}]
+}</code></pre>
+<h3 id="analyses-request-body-property-required-array-of-analysis-objects"><code>analyses</code> request-body property (required, array of Analysis objects)</h3>
+<p>The <code>analyses</code> request-body property identifies an array of analyses for which to query processing status.</p>
+<p>This property is required and must be an array of analysis objects. An analysis object identifies an analysis by either name or UUID (universally unique ID) and must have one of the following two forms:</p>
+<pre><code>{&quot;name&quot;: &quot;some name&quot;}</code></pre>
+<p>or</p>
+<pre><code>{&quot;uuid&quot;: &quot;server assigned UUID&quot;}</code></pre>
+<h2 id="http-status-codes">HTTP status codes</h2>
+<p>Returns <code>200 OK</code> on success. Returns <code>400 Bad Request</code> with an error message in the response body on input error.</p>
+<h2 id="http-response-body">HTTP response body</h2>
+<p>The HTTP response body is in JSON format. It contains an <code>analyses</code> property with an array value that gives the processing status of each analysis listed in the request body. Analyses that are in <code>Available</code> status also include a list of their metrics that can be downloaded in subsequent <em>Get Metrics</em> calls.</p>
+<h3 id="response-body-example">Response-body example</h3>
+<p>The following response body gives processing status for a single analysis whose UUID and name are identical:</p>
+<pre><code>{
+  &quot;analyses&quot;: [
+    {
+      &quot;metrics&quot;: [
+        &quot;od_pers&quot;,
+        &quot;od_comm&quot;,
+        &quot;zone_od_pers&quot;,
+        &quot;zone_od_comm&quot;
+      ],
+      &quot;name&quot;: &quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;,
+      &quot;status&quot;: &quot;Available&quot;,
+      &quot;uuid&quot;: &quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;
+    }
+  ],
+  &quot;status&quot;: &quot;success&quot;
+}</code></pre>
+<p>The above analysis has status <code>Available</code> and supports <em>Get Metrics</em> requests for the following four metrics: - <code>od_pers</code> - <code>od_comm</code> - <code>zone_od_pers</code> - <code>zone_od_comm</code></p>
+<h3 id="analyses-response-body-property"><code>analyses</code> response-body property</h3>
+<p>The <code>analyses</code> response-body property is an array of analysis-status objects. Each analysis-status objects has the following properties: - <code>metrics</code>: an array of metrics that can be downloaded for this Aaalysis (included only if the status of the analysis is <code>Available</code>) - <code>name</code>: name of the analysis - <code>status</code>: processing status of the analysis - <code>uuid</code>: UUID (universally unique ID) for the analysis, assigned by the server at the time of analysis creation</p>
+<h3 id="status-response-body-property"><code>status</code> response-body property</h3>
+<p>Will always be <code>success</code> when the request is successful.</p>
+<h2 id="example-request">Example request</h2>
+<p>This example request and response was generated using the <code>curl</code> command-line utility. See the <a href="../quickstart">Data API Quick Start</a> for instructions to rerun this example against the live server.</p>
+<pre><code>POST /api/v2/analyses/status?key=SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1 HTTP/1.1
+User-Agent: curl/7.35.0
+Host: insight.streetlightdata.com
+Accept: */*
+content-type:application/json
+Content-Length: 66
+
+{
+    &quot;analyses&quot;:[{&quot;uuid&quot;:&quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;}]
+}</code></pre>
+<h2 id="example-response">Example response</h2>
+<pre><code>HTTP/1.1 200 OK
+Date: Mon, 10 Apr 2017 17:35:30 GMT
+Content-Type: application/json
+Content-Length: 351
+Connection: keep-alive
+Set-Cookie: __cfduid=ddb78e21d5641dfae48b8d0f7fa8718311491845730; expires=Tue, 10-Apr-18 17:35:30 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Signature: 08a12cbd0e03edec92da03abb8ad3d0a17507b63
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+Server: cloudflare-nginx
+CF-RAY: 34d77684c9196e2c-SJC
+
+{
+  &quot;analyses&quot;: [
+    {
+      &quot;metrics&quot;: [
+        &quot;od_pers&quot;,
+        &quot;od_comm&quot;,
+        &quot;zone_od_pers&quot;,
+        &quot;zone_od_comm&quot;
+      ],
+      &quot;name&quot;: &quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;,
+      &quot;status&quot;: &quot;Available&quot;,
+      &quot;uuid&quot;: &quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;
+    }
+  ],
+  &quot;status&quot;: &quot;success&quot;
+}</code></pre>
+<p>Copyright © 2021, StreetLight Data, Inc. All rights reserved.</p>
+</body>
+</html>

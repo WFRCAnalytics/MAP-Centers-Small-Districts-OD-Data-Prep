@@ -1,0 +1,140 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="api-reference-list-and-search-analyses">API Reference: List and Search Analyses</h1>
+<h2 id="description">Description</h2>
+<p>Retrieve a list of Analyses by the specified search criteria.</p>
+<h2 id="http-request-method-and-url">HTTP request method and URL</h2>
+<pre><code>GET https://insight.streetlightdata.com/api/v2/analyses/search</code></pre>
+<h2 id="authentication">Authentication</h2>
+<p>You must provide your API key in each request to identify your organization to StreetLight&quot;s servers. Provide your API key using a query parameter named <code>key</code>. The query parameter is the part of the request URL after the question mark. Alternatively, you can pass the key using the HTTP header <code>x-stl-key</code>. The server returns a <code>401 Unauthorized</code> status code if authentication fails.</p>
+<p>Contact your StreetLight Data representative to obtain an API key.</p>
+<h3 id="created_date_from-request-parameter-optional-string"><code>created_date_from</code> request parameter (optional, string)</h3>
+<p>The <code>created_date_from</code> request parameter is a string representing date with format <code>MM/DD/YYYY</code>. If present, the <code>analyses</code> list will be filtered to include Analyses that were created after the specified date inclusively.</p>
+<pre><code>/api/v2/analyses/search?created_date_from=&quot;01/01/2021&quot;</code></pre>
+<h3 id="created_date_to-request-parameter-optional-string"><code>created_date_to</code> request parameter (optional, string)</h3>
+<p>The <code>created_date_to</code> request parameter is a string representing date with format <code>MM/DD/YYYY</code>. If present, the <code>analyses</code> list will be filtered to include Analyses that were created before the specified date inclusively.</p>
+<pre><code>/api/v2/analyses/search?created_date_to=&quot;01/01/2021&quot;</code></pre>
+<h3 id="name_contains-request-parameter-optional-string"><code>name_contains</code> request parameter (optional, string)</h3>
+<p>The <code>name_contains</code> request parameter is a string that is supposed to be included in the analysis name. If present, the <code>analyses</code> list will be filtered to include Analyses that&quot;s names contain a string specified in this parameter. The search is case insensitive and the order of words in the specified string does not matter, ie. &quot;Test Segment Analysis&quot; allow for matching &quot;Segment Analysis Test&quot;.</p>
+<pre><code>/api/v2/analyses/search?name_contains=&quot;Test Segment Analysis&quot;</code></pre>
+<h3 id="analysis_type-request-parameter-optional-string"><code>analysis_type</code> request parameter (optional, string)</h3>
+<p>The <code>analysis_type</code> request parameter is a string representing analysis type. If present, the <code>analyses</code> list will be filtered to include Analyses of a certain type. The <code>analysis_type</code> request-body parameter must be a string with one of the following values:</p>
+<ul>
+<li><code>OD_Analysis</code></li>
+<li><code>OD_MF_Analysis</code></li>
+<li><code>Zone_Activity_Analysis</code></li>
+<li><code>OD_Preset_Geography</code></li>
+<li><code>Segment_Analysis</code></li>
+<li><code>AADT</code></li>
+<li><code>Top_Routes_OD</code></li>
+<li><p><code>Top_Routes_ZA</code></p>
+<p>/api/v2/analyses/search?analysis_type=&quot;OD_Analysis&quot;</p></li>
+</ul>
+<h3 id="travel_mode_type-request-parameter-optional-string"><code>travel_mode_type</code> request parameter (optional, string)</h3>
+<p>The <code>travel_mode_type</code> request parameter is a string representing analysis travel mode type. If present, the <code>analyses</code> list will be filtered to include Analyses of a certain travel mode type. The <code>travel_mode_type</code> request-body parameter must be a string with one of the following values:</p>
+<ul>
+<li><code>All_Vehicles</code></li>
+<li><code>Truck</code></li>
+<li><code>Bicycle</code></li>
+<li><code>Pedestrian</code></li>
+<li><code>Bus</code></li>
+<li><p><code>Rail</code></p>
+<p>/api/v2/analyses/search?travel_mode_type=&quot;All_Vehicles&quot;</p></li>
+</ul>
+<h2 id="http-status-codes">HTTP status codes</h2>
+<p>Returns <code>200 OK</code> on success. Can return other status codes on error.</p>
+<h2 id="http-response-body">HTTP response body</h2>
+<p>The HTTP response body is in JSON format. It includes the request <code>status</code> and an array of Analysis objects.</p>
+<h3 id="response-body-example">Response-body example</h3>
+<pre><code>{
+    &quot;status&quot;: &quot;success&quot;
+    &quot;analyses&quot;: 
+    [
+        {
+            &quot;analysis_name&quot;: &quot;project 2&quot;,
+            &quot;analysis_type&quot;: &quot;OD_MF&quot;,
+            &quot;analysis_uuid&quot;: &quot;71721353-abb0-4463-98d7-50b4265fcdb5&quot;,
+            &quot;created_by_uuid&quot;: 801,
+            &quot;created_date&quot;: &quot;07/13/2021&quot;,
+            &quot;data_period&quot;: [{&quot;month_num&quot;: 8, &quot;year_num&quot;: 2014},
+                            {&quot;month_num&quot;: 1, &quot;year_num&quot;: 2015},
+                            {&quot;month_num&quot;: 3, &quot;year_num&quot;: 2015}],
+            &quot;number_of_zones&quot;: 0,
+            &quot;travel_mode&quot;: &quot;Truck&quot;
+        },
+        {
+            &quot;analysis_name&quot;: &quot;project 1&quot;,
+            &quot;analysis_type&quot;: &quot;OD_MF&quot;,
+            &quot;analysis_uuid&quot;: &quot;50345d18-66cd-4352-bbb7-09e272234cdb&quot;,
+            &quot;created_by_uuid&quot;: 801,
+            &quot;created_date&quot;: &quot;07/13/2021&quot;,
+            &quot;data_period&quot;: [{&quot;month_num&quot;: 8, &quot;year_num&quot;: 2014},
+                            {&quot;month_num&quot;: 1, &quot;year_num&quot;: 2015},
+                            {&quot;month_num&quot;: 3, &quot;year_num&quot;: 2015}],
+            &quot;number_of_zones&quot;: 0,
+            &quot;travel_mode&quot;: &quot;Truck&quot;
+        }
+    ],
+}</code></pre>
+<h3 id="status-response-body-property"><code>status</code> response-body property</h3>
+<p>Will always be <code>success</code> when the request is successful.</p>
+<h3 id="analyses-response-body-property"><code>analyses</code> response-body property</h3>
+<p>The <code>analyses</code> property contains an array of Analysis objects that are currently available in an Organization.</p>
+<h2 id="example-request">Example request</h2>
+<p>This example request and response was generated using the <code>curl</code> command-line utility. See the <a href="../quickstart">Data API Quick Start</a> for instructions to rerun this example against the live server.</p>
+<pre><code>GET /api/v2/analyses/search?created_date_from=&quot;01/01/2021&quot;&amp;created_date_to=&quot;03/01/2021&quot;&amp;travel_mode_type=&quot;Pedestrian&quot; HTTP/1.1</code></pre>
+<h2 id="example-response">Example response</h2>
+<pre><code>HTTP/1.1 200 OK
+Date: Mon, 10 Apr 2017 18:02:53 GMT
+Content-Type: application/json
+Content-Length: 128
+Connection: keep-alive
+Set-Cookie: __cfduid=d496fa281a93825a191898d095bf65f3f1491847373; expires=Tue, 10-Apr-18 18:02:53 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Last-Modified: Fri, 07 Apr 2017 04:20:06 GMT
+Cache-Control: public, max-age=0, no-cache
+Expires: Mon, 10 Apr 2017 18:02:53 GMT
+ETag: &quot;58e71376-235f&quot;
+Accept-Ranges: bytes
+Server: cloudflare-nginx
+CF-RAY: 34d79ea33c17515e-SJC
+{
+    &quot;status&quot;: &quot;success&quot;
+    &quot;analyses&quot;: 
+    [
+        {
+            &quot;analysis_name&quot;: &quot;project 2&quot;,
+            &quot;analysis_type&quot;: &quot;OD_MF&quot;,
+            &quot;analysis_uuid&quot;: &quot;71721353-abb0-4463-98d7-50b4265fcdb5&quot;,
+            &quot;created_by_uuid&quot;: 801,
+            &quot;created_date&quot;: &quot;07/13/2021&quot;,
+            &quot;data_period&quot;: [{&quot;month_num&quot;: 8, &quot;year_num&quot;: 2014},
+                            {&quot;month_num&quot;: 1, &quot;year_num&quot;: 2015},
+                            {&quot;month_num&quot;: 3, &quot;year_num&quot;: 2015}],
+            &quot;number_of_zones&quot;: 0,
+            &quot;travel_mode&quot;: &quot;Truck&quot;
+        },
+        {
+            &quot;analysis_name&quot;: &quot;project 1&quot;,
+            &quot;analysis_type&quot;: &quot;OD_MF&quot;,
+            &quot;analysis_uuid&quot;: &quot;50345d18-66cd-4352-bbb7-09e272234cdb&quot;,
+            &quot;created_by_uuid&quot;: 801,
+            &quot;created_date&quot;: &quot;07/13/2021&quot;,
+            &quot;data_period&quot;: [{&quot;month_num&quot;: 8, &quot;year_num&quot;: 2014},
+                            {&quot;month_num&quot;: 1, &quot;year_num&quot;: 2015},
+                            {&quot;month_num&quot;: 3, &quot;year_num&quot;: 2015}],
+            &quot;number_of_zones&quot;: 0,
+            &quot;travel_mode&quot;: &quot;Truck&quot;
+        }
+    ],
+}</code></pre>
+<p>Copyright © 2021, StreetLight Data, Inc. All rights reserved.</p>
+</body>
+</html>

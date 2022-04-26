@@ -1,0 +1,67 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="api-reference-lookup-date-ranges-available-to-an-organization">API Reference: Lookup Date Ranges Available to an Organization</h1>
+<h2 id="description">Description</h2>
+<p>Look up the date ranges that can be used in the current organization to create an analysis.</p>
+<h2 id="http-request-method-and-url">HTTP request method and URL</h2>
+<pre><code>GET https://insight.streetlightdata.com/api/v2/date_ranges/&lt;country&gt;/&lt;travel_mode_type&gt;</code></pre>
+<h2 id="authentication">Authentication</h2>
+<p>You must provide your API key in each request to identify your organization to StreetLight's servers. Provide your API key using a query parameter named <code>key</code>. The query parameter is the part of the request URL after the question mark. Alternatively, you can pass the key using the HTTP header <code>x-stl-key</code>. The server returns a <code>401 Unauthorized</code> status code if authentication fails.</p>
+<p>Contact your StreetLight Data representative to obtain an API key.</p>
+<h2 id="http-status-codes">HTTP status codes</h2>
+<p>Returns <code>200 OK</code> on success. Can return other status codes on error.</p>
+<h2 id="http-response-body">HTTP response body</h2>
+<p>The HTTP response body is in json format. It echoes the available date ranges and the defaults.</p>
+<p>When creating an analysis, note that the mode of travel selected must be available for each date range in the analysis. For example, if running an analysis for All_Vehicles between January 2019 - March 2019, check that the <code>supports</code> field contains the Jan, Feb and March before creating the analysis.</p>
+<h2 id="example-request">Example request</h2>
+<p>This example request and response was generated using the <code>curl</code> command-line utility. See the <a href="../quickstart">Data API Quick Start</a> for instructions to rerun this example against the live server.</p>
+<pre><code>GET /api/v2/date_ranges/US/All_Vehicles?key=SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1 HTTP/1.1</code></pre>
+<h2 id="example-response">Example response</h2>
+<pre><code>HTTP/1.1 200 OK
+Date: Mon, 10 Apr 2017 18:02:53 GMT
+Content-Type: application/json
+Content-Length: 128
+Connection: keep-alive
+Set-Cookie: __cfduid=d496fa281a93825a191898d095bf65f3f1491847373; expires=Tue, 10-Apr-18 18:02:53 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Last-Modified: Fri, 07 Apr 2017 04:20:06 GMT
+Cache-Control: public, max-age=0, no-cache
+Expires: Mon, 10 Apr 2017 18:02:53 GMT
+ETag: &quot;58e71376-235f&quot;
+Accept-Ranges: bytes
+Server: cloudflare-nginx
+CF-RAY: 34d79ea33c17515e-SJC
+{
+  &quot;date_ranges&quot;: {
+    &quot;supports&quot;: [
+        {
+            &quot;start_date&quot;: &quot;01/01/2019&quot;,
+            &quot;end_date&quot;: &quot;12/31/2019&quot;,
+        }
+    ],
+    &quot;default&quot;: [
+        {
+            &quot;start_date&quot;: &quot;03/01/2019&quot;,
+            &quot;end_date&quot;: &quot;04/30/2019&quot;,
+        },
+        {
+            &quot;start_date&quot;: &quot;09/01/2019&quot;,
+            &quot;end_date&quot;: &quot;10/31/2019&quot;,
+        }
+    ]
+  }
+}</code></pre>
+<h2 id="country-request-query-parameter-required-string"><code>country</code> request query parameter (required, string)</h2>
+<p>The <code>country</code> parameter is a required string and must be one of the following values: - <code>US</code> - <code>CA</code></p>
+<h2 id="travel_mode_type-request-query-parameter-required-string"><code>travel_mode_type</code> request query parameter (required, string)</h2>
+<p>The <code>travel_mode_type</code> parameter is a required string and must be one of the following values: - <code>All_Vehicles</code> - <code>Truck</code> - <code>Bicycle</code> - <code>Pedestrian</code> - <code>Bus</code> - <code>Rail</code></p>
+<p>Copyright © 2021, StreetLight Data, Inc. All rights reserved.</p>
+</body>
+</html>

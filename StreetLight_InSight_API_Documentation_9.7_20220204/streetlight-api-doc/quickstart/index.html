@@ -1,0 +1,287 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Style-Type" content="text/css" />
+  <meta name="generator" content="pandoc" />
+  <title></title>
+  <style type="text/css">code{white-space: pre;}</style>
+</head>
+<body>
+<h1 id="streetlight-insight-data-api-quick-start">StreetLight InSight® Data API Quick Start</h1>
+<p>This is a short end-to-end technical example to get you up and running with the StreetLight InSight® Data API. With the Data API, you can create Zone Sets and Analyses, query the status of Analyses, and download Metrics for Analyses that the system has made Available.</p>
+<p>The Data API is a REST+JSON API that uses HTTPS as its network protocol. You are free to use any language to implement the client side of this protocol. In the following example, we will use the <a href="https://curl.haxx.se">curl</a> command-line utility. In practice, you will probably want to use a full-fledged programming language to implement your API client. This example has been tested on Linux.</p>
+<p>Refer to the <a href="../reference">API Reference</a> after going through this quick start for more details about each API operation.</p>
+<p>You can download the code samples given here from the <a href="../code-samples">code-samples</a> folder. Before you can run them, you need to edit them to use your organization's API key instead of the one here (which is invalid and will not work). You also need to update the UUIDs in the requests to match the ones you receive from the server.</p>
+<h1 id="before-you-begin">Before You Begin</h1>
+<p>Before you begin, obtain an API key for your organization from your StreetLight Data representative. Keep this API key secure as it grants access to your organization's data in StreetLight InSight®. Also, obtain an application login to the StreetLight InSight® web UI. For debugging purposes, you can use the web UI to view Zone Sets and Analyses that you create using this API.</p>
+<p>The API key in the examples below is not valid and will not work.</p>
+<p>API keys plus HTTPS provide basic security for API requests. Talk with your StreetLight Data representative if your organization would like to upgrade your API traffic to a token-based authentication scheme for higher security. Note that a token-based authentication scheme may require slightly more client-side programming.</p>
+<h1 id="notes-and-limitations">Notes and Limitations</h1>
+<p>Keep the following in mind when working with the StreetLight Data API: In this release, Analyses that include Zones with insufficient coverage will be sent to coverage review by StreetLight Data's Support team. The product does not yet support a workflow that processes the covered subset of Analysis Zones without human intervention.</p>
+<h1 id="confirm-connectivity-using-your-api-key">Confirm Connectivity Using Your API Key</h1>
+<p>You must provide your API key in each request to identify your organization to StreetLight's servers. Provide your API key using a query parameter named <code>key</code>. The query parameter is the part of the request URL after the question mark. Alternatively, you can pass the key using the HTTP header <code>x-stl-key</code>. The server returns a <code>401 Unauthorized</code> status code if authentication fails.</p>
+<p>We have provided a debug endpoint that echoes back a message in the request body to help test that you can connect and authenticate successfully to StreetLight's API server. This endpoint is for debugging only. You do not need to use in production to create Analyses or get Metrics.</p>
+<p>Create a file called debug-echo.sh with the following contents and make it executable. Substitute your organization's API key in the query string (after the question mark).</p>
+<pre><code>#!/bin/bash
+
+curl -i -d &#39;{&quot;message&quot;: &quot;hello world&quot;}&#39; \
+    -H &quot;content-type: application/json&quot; \
+    https://insight.streetlightdata.com/api/v2/debug/echo?key=SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1</code></pre>
+<p>Run ./debug-echo.sh from the command line to verify that you can connect to StreetLight's server and successfully authenticate using your API key. If you receive a HTTP <code>200 OK</code> response, this test was successful.</p>
+<pre><code>$ ./echo.sh
+HTTP/1.1 200 OK
+Date: Sat, 01 Apr 2017 23:42:28 GMT
+Content-Type: application/json
+Content-Length: 55
+Connection: keep-alive
+Set-Cookie: __cfduid=de8ff844541eaa29a65ea6870b508baa71491090148; expires=Sun, 01-Apr-18 23:42:28 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Signature: 08a12cbd0e03edec92da03abb8ad3d0a17507b63
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+Server: cloudflare-nginx
+CF-RAY: 348f67b478f951ca-SJC
+
+{
+  &quot;message&quot;: &quot;hello world&quot;,
+  &quot;status&quot;: &quot;success&quot;
+}</code></pre>
+<h1 id="create-a-zone-set">Create a Zone Set</h1>
+<p>Create a file called zones.json with the following contents. It defines two Zones in a GeoJSON feature collection where each feature is a MultiPolygon. Note that zones can be GeoJSON MultiPolygons or LineStrings. Each Zone must have the following four properties: <code>name</code> (required), <code>id</code> (integer, nullable), <code>is_pass</code> (either 0 for no or 1 for yes), and <code>direction</code> (decimal degrees from 0 to 360, only applicable if <code>is_pass</code> is equal to 1). The property <code>geom_type</code> is optional with default value of <code>polygon</code>. The property <code>insight_login_email</code> is required and the user must have access to the specified organization to create a Zone Set.</p>
+<p>Refer to the GeoJSON spec at <a href="http://geojson.org/" class="uri">http://geojson.org/</a> for details on the GeoJSON format.</p>
+<pre><code>{
+&quot;insight_login_email&quot;:&quot;testemail@streetlightdata.com&quot;,
+&quot;geom_type&quot;: &quot;polygon&quot;,
+&quot;zones&quot;: {
+&quot;type&quot;: &quot;FeatureCollection&quot;,
+&quot;features&quot;: [
+{ &quot;type&quot;: &quot;Feature&quot;, &quot;properties&quot;: { &quot;id&quot;: 1, &quot;name&quot;: &quot;Mission&quot;, &quot;is_pass&quot;: 0, &quot;direction&quot;: null }, &quot;geometry&quot;: { &quot;type&quot;: &quot;MultiPolygon&quot;, &quot;coordinates&quot;: [ [ [ [ -122.426698258661972, 37.769562689936315 ], [ -122.423394859041892, 37.772083876030344 ], [ -122.42225575572462, 37.770418101996292 ], [ -122.411206453547067, 37.769427623969634 ], [ -122.406991771273155, 37.769067446852375 ], [ -122.404656609472752, 37.767716767038294 ], [ -122.405169205965521, 37.762628984940662 ], [ -122.406593085112107, 37.760557752167074 ], [ -122.405795712790038, 37.758441432691242 ], [ -122.403232730326167, 37.75722564731312 ], [ -122.402549268335804, 37.751821915004783 ], [ -122.403346640657901, 37.749390106706535 ], [ -122.407561322931784, 37.748399347080543 ], [ -122.424875693354338, 37.74781389197571 ], [ -122.426698258661972, 37.769562689936315 ] ] ] ] } },
+{ &quot;type&quot;: &quot;Feature&quot;, &quot;properties&quot;: { &quot;id&quot;: 2, &quot;name&quot;: &quot;Financial District&quot;, &quot;is_pass&quot;: 0, &quot;direction&quot;: null }, &quot;geometry&quot;: { &quot;type&quot;: &quot;MultiPolygon&quot;, &quot;coordinates&quot;: [ [ [ [ -122.405425504211919, 37.798033588378779 ], [ -122.398476973976571, 37.798933675051543 ], [ -122.396654408668923, 37.799698740100226 ], [ -122.397024617247041, 37.79929370664977 ], [ -122.396768319000643, 37.798911173018389 ], [ -122.395828558763895, 37.797898574431919 ], [ -122.393607307295227, 37.799113691070012 ], [ -122.392610591892605, 37.797876072083447 ], [ -122.394233814119715, 37.79690846455324 ], [ -122.393037755636598, 37.795670808599994 ], [ -122.3913575782436, 37.796278387822021 ], [ -122.390987369665496, 37.795693311702443 ], [ -122.392439726395011, 37.794500642185817 ], [ -122.389278714689581, 37.791462623416393 ], [ -122.401182344355107, 37.781965196242638 ], [ -122.405824190372982, 37.785701296639232 ], [ -122.406222876534017, 37.785723802695827 ], [ -122.407134159187834, 37.790337399578668 ], [ -122.404058580231194, 37.790764986655553 ], [ -122.405425504211919, 37.798033588378779 ] ] ] ] } }
+]
+}}</code></pre>
+<p>Create a file called create-zone-set.sh with contents like the ones below and make it executable. Substitute your organization's API key in the query string.</p>
+<pre><code>#!/bin/bash
+
+curl -i -d @zones.json \
+    -H &quot;content-type: application/json&quot; \
+    https://insight.streetlightdata.com/api/v2/zone_sets?key=SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1</code></pre>
+<p>Run ./create-zone-set.sh from the command line:</p>
+<pre><code>$ ./create-zone-set.sh
+HTTP/1.1 100 Continue
+
+HTTP/1.1 201 CREATED
+Date: Fri, 07 Apr 2017 04:12:20 GMT
+Content-Type: application/json
+Content-Length: 128
+Connection: keep-alive
+Set-Cookie: __cfduid=de80e418234dff51a8a3b431f3cf392081491538339; expires=Sat, 07-Apr-18 04:12:19 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Signature: 08a12cbd0e03edec92da03abb8ad3d0a17507b63
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+Server: cloudflare-nginx
+CF-RAY: 34ba25df1cca6bf2-SJC
+
+{
+  &quot;name&quot;: &quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;,
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;uuid&quot;: &quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;
+}</code></pre>
+<p>If you receive a <code>201 Created</code> response code from the server, your Zone Set creation succeeded. You can also log into the application UI and view the Zone Set there under the Manage Travel Analyses &gt; Manage Zone Sets menu path.</p>
+<p>The server assigns your newly created Zone Set a UUID (universally unique ID) and returns that in the response body. It also assigns a name that is equal to the UUID unless you chose to specify an optional <code>zone_set_name</code> in your request body. If you supply the <code>zone_set_name</code> in the request, it must be case-insensitive unique and no longer than 50 characters.</p>
+<h1 id="view-available-data-source-and-available-date-ranges">View Available Data Source and Available Date Ranges</h1>
+<p>The Data API supports looking up the available date ranges for the data sources allowed in your organization. The following example looks up available date ranges.</p>
+<p>Create a file called lookup-date-ranges.sh with the following contents and make it executable. Substitue your organization's API key below in the x-stl-key request header.</p>
+<pre><code>#!/bin/bash
+
+curl -i \
+    -H &quot;x-stl-key: SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1&quot; \
+    https://insight.streetlightdata.com/api/v2/date_ranges/US/All_Vehicles</code></pre>
+<p>Run ./lookup-date-ranges.sh from the command line. You should see results similar to the following:</p>
+<pre><code>$ ./lookup-date-ranges.sh
+HTTP/1.1 200 OK
+Date: Fri, 07 Apr 2017 04:15:37 GMT
+Content-Type: application/json
+Content-Length: 128
+Connection: keep-alive
+Set-Cookie: __cfduid=d7f9ea7c345ce679f5dcdf85a1d668df51491538537; expires=Sat, 07-Apr-18 04:15:37 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Last-Modified: Fri, 07 Apr 2017 04:20:06 GMT
+Cache-Control: public, max-age=0, no-cache
+Expires: Fri, 07 Apr 2017 04:23:20 GMT
+ETag: &quot;58e71376-235f&quot;
+Accept-Ranges: bytes
+Server: cloudflare-nginx
+CF-RAY: 34ba35fe5a012828-SJC
+{
+  &quot;date_ranges&quot;: {
+    &quot;supports&quot;: [
+        {
+            &quot;start_date&quot;: &quot;01/01/2019&quot;,
+            &quot;end_date&quot;: &quot;12/31/2019&quot;,
+        }
+    ],
+    &quot;default&quot;: [
+        {
+            &quot;start_date&quot;: &quot;03/01/2019&quot;,
+            &quot;end_date&quot;: &quot;04/30/2019&quot;,
+        },
+        {
+            &quot;start_date&quot;: &quot;09/01/2019&quot;,
+            &quot;end_date&quot;: &quot;10/31/2019&quot;,
+        }
+    ]
+  }
+}</code></pre>
+<p>You can use the information gathered from above to help you create a analysis with the proper available date ranges.</p>
+<h1 id="create-an-o-d-analysis">Create an O-D Analysis</h1>
+<p>The Data API supports O-D Analysis, O-D Analysis with Middle Filter, Zone Activity Analysis, O-D to Pre-set Geography, Segment analysis, Top Routes O-D, Top Routes Zone Analysis, and AADT analysis types in this release. The following example creates an O-D Analysis.</p>
+<p>Create a file called create-analysis.json with contents similar to the following. Substitute the Zone Set UUID you received from the server below in the <code>oz_sets</code> (Origin Zone Sets) and <code>dz_sets</code> (Destination Zone Sets) elements. (They are both one-element arrays containing the same Zone Set.)</p>
+<pre><code>{
+  &quot;insight_login_email&quot;:&quot;testemail@streetlightdata.com&quot;,
+  &quot;analysis_type&quot;:&quot;OD_Analysis&quot;,
+  &quot;travel_mode_type&quot;:&quot;Truck&quot;,
+  &quot;description&quot;:&quot;&quot;,
+  &quot;oz_sets&quot;:[{&quot;uuid&quot;:&quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;}],
+  &quot;dz_sets&quot;:[{&quot;uuid&quot;:&quot;a486a871-c610-4a0e-b87e-9b3c030862a1&quot;}],
+  &quot;date_ranges&quot;: [{&quot;start_date&quot;: &quot;01/01/2016&quot;, &quot;end_date&quot;: &quot;12/31/2016&quot;}]
+  &quot;day_types&quot;:&quot;Average Day|17,Average Weekday|14,Average Weekend Day|67&quot;,
+  &quot;day_parts&quot;:&quot;All Day|0023,Early AM|0005,Peak AM|0609,Mid-Day|1014,Peak PM|1518,Late PM|1923&quot;,
+  &quot;trip_attributes&quot;:false,
+  &quot;traveler_attributes&quot;:false
+}</code></pre>
+<p>Here are some notes on the above example: - <code>insight_login_email</code> is required and the user must have access to the specified organization to create a analysis - <code>oz_sets</code> and <code>dz_sets</code> can also be specified by name instead of by UUID. It is possible to refer to Zone Sets created via the application UI this way. - <code>date_ranges</code> is a list of pairs of start and end dates in MM/DD/YYYY format. - <code>day_types</code> is a comma-separated list of day types in the analysis. Each day type has a name separated by the vertical bar from the start day of week to the end day of week (1 for Monday through 7 for Sunday). Analyses must define Average Day as &quot;17&quot; (Monday through Sunday), and they must define Average Weekday and Average Weekend Day. - <code>day_parts</code> is a comma-separated list of day parts in the analysis. Each day part has a name separated by the vertical bar from the start hour and end hour from 00 (midnight) to 23 (11 PM). For example, 'All Day|0023' ranges from midnight (00:00) to 11:59 PM. Analyses must define All Day as 0023 (midnight to midnight). - If <code>trip_attributes</code> is true, then <code>trip_duration_bins</code>, <code>trip_length_bins</code>, <code>trips_speed_bins</code>, and <code>trip_circuity_bins</code> can also be specified. They are comma-separated lists and have the same units and defaults as in the app UI. - Optionally, a <code>analysis_name</code> can be specified in the request body. If specified, it must be case-insensitive unique and must be no more than 50 characters long. The server assigns a UUID-based name if the caller does not supply one.</p>
+<p>Create a file called create-analysis.sh with the following contents and make it executable. Substitute your organization's API key below in the x-stl-key request header.</p>
+<pre><code>#!/bin/bash
+
+curl -i -d @create-analysis.json \
+    -H &quot;content-type:application/json&quot; \
+    https://insight.streetlightdata.com/api/v2/analyses?key=SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1</code></pre>
+<p>Run ./create-analysis.sh from the command line. You should see results similar to the following:</p>
+<pre><code>$ ./create-analysis.sh
+HTTP/1.1 201 CREATED
+Date: Fri, 07 Apr 2017 04:15:37 GMT
+Content-Type: application/json
+Content-Length: 128
+Connection: keep-alive
+Set-Cookie: __cfduid=d7f9ea7c345ce679f5dcdf85a1d668df51491538537; expires=Sat, 07-Apr-18 04:15:37 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Signature: 08a12cbd0e03edec92da03abb8ad3d0a17507b63
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+Server: cloudflare-nginx
+CF-RAY: 34ba2ab3bdac6e32-SJC
+
+{
+  &quot;name&quot;: &quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;,
+  &quot;status&quot;: &quot;success&quot;,
+  &quot;uuid&quot;: &quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;
+}</code></pre>
+<p>At this point, in addition to using the following API call to query analysis status, you can also see the analysis and its status by logging into the InSight application UI.</p>
+<h1 id="query-processing-status-of-your-analysis">Query Processing Status of Your Analysis</h1>
+<p>Create a file called query-analysis-status.json with contents similar to the following. Substitute the Analysis UUID from the previous Create Analysis server response in this request body.</p>
+<pre><code>{
+    &quot;analyses&quot;:[{&quot;uuid&quot;:&quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;}]
+}</code></pre>
+<p>Create a file called query-analysis-status.sh with the following contents and make it executable. Substitute your organization's API key.</p>
+<pre><code>#!/bin/bash
+
+curl -i -d @query-analysis-status.json \
+    -H &quot;content-type:application/json&quot; \
+    https://insight.streetlightdata.com/api/v2/analyses/status?key=SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1</code></pre>
+<p>Run ./query-analysis-status.sh from the command line. At first, you should see results similar to the following:</p>
+<pre><code>$ ./query-analysis-status.sh
+HTTP/1.1 200 OK
+Date: Fri, 07 Apr 2017 04:16:22 GMT
+Content-Type: application/json
+Content-Length: 199
+Connection: keep-alive
+Set-Cookie: __cfduid=d2bfa2766e66a9b14605c3ac3938231641491538582; expires=Sat, 07-Apr-18 04:16:22 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Signature: 08a12cbd0e03edec92da03abb8ad3d0a17507b63
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+Server: cloudflare-nginx
+CF-RAY: 34ba2bcd1bbe6dde-SJC
+
+{
+  &quot;analyses&quot;: [
+    {
+      &quot;name&quot;: &quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;,
+      &quot;status&quot;: &quot;Processing&quot;,
+      &quot;uuid&quot;: &quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;
+    }
+  ],
+  &quot;status&quot;: &quot;success&quot;
+}</code></pre>
+<p>Eventually, you will see status results showing that the analysis is Available and listing the Metrics that it has.</p>
+<pre><code>$ ./query-analysis-status.sh
+HTTP/1.1 200 OK
+Date: Fri, 07 Apr 2017 04:20:40 GMT
+Content-Type: application/json
+Content-Length: 351
+Connection: keep-alive
+Set-Cookie: __cfduid=d1771e701a9bd3300a0e2b8bd7efe9e491491538839; expires=Sat, 07-Apr-18 04:20:39 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Signature: 08a12cbd0e03edec92da03abb8ad3d0a17507b63
+Cache-Control: no-cache, no-store, must-revalidate
+Pragma: no-cache
+Expires: 0
+Server: cloudflare-nginx
+CF-RAY: 34ba32155e586e2c-SJC
+
+{
+  &quot;analyses&quot;: [
+    {
+      &quot;metrics&quot;: [
+        &quot;od_pers&quot;,
+        &quot;od_comm&quot;,
+        &quot;zone_od_pers&quot;,
+        &quot;zone_od_comm&quot;
+      ],
+      &quot;name&quot;: &quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;,
+      &quot;status&quot;: &quot;Available&quot;,
+      &quot;uuid&quot;: &quot;1be1edc3-7575-4003-850c-62145f4986cb&quot;
+    }
+  ],
+  &quot;status&quot;: &quot;success&quot;
+}</code></pre>
+<h1 id="get-metrics-for-your-analysis">Get Metrics for Your Analysis</h1>
+<p>After your Analysis becomes Available, you can get Metrics for it. Create a file called get-od-personal-results.sh with contents similar to the following and make it executable. Substitute the Analysis UUID from the previous server responses in the request URL.</p>
+<pre><code>#!/bin/bash
+
+curl -i \
+    -H &quot;x-stl-key: SS5OKOrGT4rQw/FCXZs55eEPZd6u0nd1&quot; \
+    https://insight.streetlightdata.com/api/v2/analyses/download/uuid/1be1edc3-7575-4003-850c-62145f4986cb/od_pers</code></pre>
+<p>Run ./get-od-personal-results.sh from the command line. You should get results that start similar to the following server response (truncated for brevity). Note: you may see different metric values due to running on a different version of the metric algorithm than in this example. Also, this API call is supported only for Analyses created via tha API, not Analyses created via tha UI.</p>
+<pre><code>$ ./get-od-personal-results.sh
+HTTP/1.1 200 OK
+Date: Fri, 07 Apr 2017 04:23:20 GMT
+Content-Type: text/csv
+Content-Length: 9055
+Connection: keep-alive
+Set-Cookie: __cfduid=d8b918f95608b9c71fe031233db300df21491539000; expires=Sat, 07-Apr-18 04:23:20 GMT; path=/; domain=.streetlightdata.com; HttpOnly
+Last-Modified: Fri, 07 Apr 2017 04:20:06 GMT
+Cache-Control: public, max-age=0, no-cache
+Expires: Fri, 07 Apr 2017 04:23:20 GMT
+ETag: &quot;58e71376-235f&quot;
+Accept-Ranges: bytes
+Server: cloudflare-nginx
+CF-RAY: 34ba35fe5a012828-SJC
+
+device_type,origin_zone_id,origin_zone_name,origin_zone_is_pass_through,origin_zone_direction,destination_zone_id,destination_zone_name,destination_zone_is_pass_through,destination_zone_direction,day_type,day_part,o_d_traffic,origin_zone_traffic,destination_zone_traffic,avg_trip_duration
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,0: Average Day (M-Su),0: All Day (12am-12am),6635,40580,46777,441
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,0: Average Day (M-Su),1: Early AM (12am-6am),116,979,881,402
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,0: Average Day (M-Su),2: Peak AM (6am-10am),1017,6954,7933,409
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,0: Average Day (M-Su),3: Mid-Day (10am-3pm),2193,12531,14843,446
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,0: Average Day (M-Su),4: Peak PM (3pm-7pm),2331,12993,15452,455
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,0: Average Day (M-Su),5: Late PM (7pm-12am),977,7122,7668,430
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,1: Average Weekday (M-Th),0: All Day (12am-12am),6934,42379,48669,435
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,1: Average Weekday (M-Th),1: Early AM (12am-6am),70,708,696,370
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,1: Average Weekday (M-Th),2: Peak AM (6am-10am),1240,8758,9756,410
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,1: Average Weekday (M-Th),3: Mid-Day (10am-3pm),2089,11657,14062,438
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,1: Average Weekday (M-Th),4: Peak PM (3pm-7pm),2547,14024,16488,450
+Personal,1,Mission,no,N/A,1,Mission,no,N/A,1: Average Weekday (M-Th),5: Late PM (7pm-12am),987,7233,7666,422</code></pre>
+<p>You can run a similar API call to retrieve the other Metrics that this analysis supports. The list of available Metrics was provided in the response to the <em>Query Analysis Status</em> API call. The list can vary by Analysis type and Analysis options. In this example, it is the following: - <code>od_pers</code> - <code>od_comm</code> - <code>zone_od_pers</code> - <code>zone_od_comm</code></p>
+<p>Copyright © 2020, StreetLight Data, Inc. All rights reserved.</p>
+</body>
+</html>

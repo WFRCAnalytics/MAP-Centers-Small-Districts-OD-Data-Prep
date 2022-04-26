@@ -1,0 +1,13 @@
+{
+   "insight_login_email":"testemail@streetlightdata.com",
+   "analysis_type":"OD_Analysis",
+   "travel_mode_type":"Truck",
+   "description":"",
+   "oz_sets":[{"uuid":"a486a871-c610-4a0e-b87e-9b3c030862a1"}],
+   "dz_sets":[{"uuid":"a486a871-c610-4a0e-b87e-9b3c030862a1"}],
+   "date_ranges": [{"start_date":  "01/01/2016", "end_date": "12/31/2016"}],
+   "day_types":"All Days|17,Weekday|14,Weekend Day|67",
+   "day_parts":"All Day|0023,Early AM|0005,Peak AM|0609,Mid-Day|1014,Peak PM|1518,Late PM|1923",
+   "trip_attributes":false,
+   "traveler_attributes":false
+}
