@@ -95,16 +95,6 @@ var sFNSGTAZID  = "SA_TAZID"  ; // field name for TAZID
 var chartkey    = []      ;
 var chartdata   = []      ;
 
-var curMode_Base      = "";
-var curYear_Base      = "";
-var curDayType_Base   = ""; // 1:Weekdays
-var curDayPart_Base   = ""; // 1:All Day
-var curSeason_Base    = ""; // 1:All Year
-var curDirection_Base = "";
-var lyrDispLayer_Base;
-var odata_base = [];
-
-
 var specgen     = [];
 var daypart     = [];
 var daytype     = [];
@@ -1107,13 +1097,16 @@ function(declare, BaseWidget, LayerInfos, registry, dom, domStyle, dijit, PanelM
 
     _updateDisplay: function() {
         console.log('_updateDisplay');
-        console.log('Current Mode: ' + curMode);
+
+
+        console.log(curMode);
 
         if (dom.byId('chkIntrazonals').checked==true) {
-          var _jsonfile = dGeo.find(o => o.value === curGeo).file + '_' + curYear + '_' + curSeason + '_' + curDayType + '_' + curDayPart + '_wiIntrazonals.json';
+          _jsonfile = dGeo.find(o => o.value === curGeo   ).file + '_' + curYear + '_' + curSeason + '_' + curDayType + '_' + curDayPart + '_wiIntrazonals.json';
         } else {
-          var _jsonfile = dGeo.find(o => o.value === curGeo).file + '_' + curYear + '_' + curSeason + '_' + curDayType + '_' + curDayPart + '_noIntrazonals.json';
+          _jsonfile = dGeo.find(o => o.value === curGeo   ).file + '_' + curYear + '_' + curSeason + '_' + curDayType + '_' + curDayPart + '_noIntrazonals.json';
         }
+
 
         // Get Season
         dojo.xhrGet({
@@ -1122,220 +1115,170 @@ function(declare, BaseWidget, LayerInfos, registry, dom, domStyle, dijit, PanelM
             load: function(obj) {
                 /* here, obj will already be a JS object deserialized from the JSON response */
                 console.log(_jsonfile);
-                odata = obj;
-                wOD._updateDisplayPart2();
+                odata = obj
 
-            },
-            error: function(err) {
-                /* this will execute if the response couldn't be converted to a JS object,
-                    or if the request was unsuccessful altogether. */
-            }
-        });
+                // select display field
 
+                // when trip ends are displayed there is only one field, directionality will be done when querying row
+                if (curVol_Per=='V') {
+                    _displayfield = curMode + 'V';
+                    _totalfield = curMode + 'V';
+                }
+                // when percent is displayed then a separate field per direction is used
+                else if (curVol_Per=='P') {
+                    _displayfield = curMode + curDirection;
+                    _totalfield = curMode + 'V';  // total is not percent but trips
+                }
+                //console.log(_displayfield);
+          
+                wOD.map.graphics.clear();
+
+                queryTask = new esri.tasks.QueryTask(lyrSmallDist.url);
+
+                var query, updateFeature;
+                query                = new Query();
+                //query.outFields = ["id","displayvalue"];
+                query.outFields = ["*"];
+                //query.returnGeometry = false;
+                query.where          = "id>=1";
+
+                lyrSmallDist.queryFeatures(query,function(featureSet) {
+                    //Update values
+                    var _totalTrips = 0;
+                    var resultCount = featureSet.features.length;
+                    for (var i = 0; i < resultCount; i++) {
+                        updateFeature = featureSet.features[i];
+                        var _smalldistid = updateFeature.attributes['id'];
         
-    },
+                        // when trip ends are displayed there is only one field, directionality will be done when querying row
+                        if        (curDirection=='O') {
+                            _dindexO = String(curSmallDist).padStart(4, '0') + '_' +  String(_smalldistid).padStart(4, '0');
+                            _dindexD = '';
+                        } else if (curDirection=='D') {
+                            _dindexO = '';
+                            _dindexD = String(_smalldistid).padStart(4, '0') + '_' +  String(curSmallDist).padStart(4, '0');
+                        } else if (curDirection=='B') {
+                            _dindexO = String(curSmallDist).padStart(4, '0') + '_' +  String(_smalldistid).padStart(4, '0');
+                            _dindexD = String(_smalldistid).padStart(4, '0') + '_' +  String(curSmallDist).padStart(4, '0');
+                        } else {
+                            _dindexO = '';
+                            _dindexD = '';
+                        }
+                
+                        valueO  = 0;
+                        valueD  = 0;
+                        valueOt = 0;
+                        valueDt = 0;
 
-    _updateDisplayPart2: function() {
-      console.log('_updateDisplayPart2');
-      // select display field
+                        // try origin
+                        try {
+                            valueO  = odata[_dindexO][_displayfield];
+                            valueOt = odata[_dindexO][_totalfield  ];
+                        }
+                        catch(err) {
+                            valueO  = 0;
+                            valueOt = 0;
+                        }
+                        // try destination
+                        try {
+                            valueD  = odata[_dindexD][_displayfield];
+                            valueDt = odata[_dindexD][_totalfield  ];
+                        }
+                        catch(err) {
+                            valueD  = 0;
+                            valueDt = 0;
+                        }
+                        
+                        if (curDirection=='B' && curVol_Per=='P') {
+                            var _displayvalue = (valueO + valueD) / 2;  // average both if both directionsstyle="display: none;"
+                            var _totalvalue = (valueOt + valueDt) / 2;
+                        } else {
+                            var _displayvalue = (valueO + valueD);
+                            var _totalvalue = (valueOt + valueDt);
+                        }
+                        
+                        _totalTrips += _totalvalue;
 
-      // when trip ends are displayed there is only one field, directionality will be done when querying row
-      if (curVol_Per=='V') {
-          _displayfield = curMode + 'V';
-          _totalfield = curMode + 'V';
-      }
-      // when percent is displayed then a separate field per direction is used
-      else if (curVol_Per=='P') {
-          _displayfield = curMode + curDirection;
-          _totalfield = curMode + 'V';  // total is not percent but trips
-      }
-      //console.log(_displayfield);
+                        if (curVol_Per=='V') {
+                            var _labelvalue = _displayvalue.toLocaleString("en-US");
+                        } else if (curVol_Per=='P') {
+                            var _labelvalue = parseFloat(_displayvalue*100).toFixed(1)+"%";
+                        }
 
-      wOD.map.graphics.clear();
+                        // if small district is one being selected, set to -1
+                        if (dom.byId('chkIntrazonals').checked==false && _smalldistid==curSmallDist) {
+                            _displayvalue = -1;
+                            _labelvalue = "";
+                            _selected = "nonintrazonal";
+                        } else if (dom.byId('chkIntrazonals').checked==true && _smalldistid==curSmallDist) {
+                            _displayvalue = -1;
+                            _selected = "intrazonal";
+                        } else {
+                            _selected = "notselected";
+                        }
 
-      queryTask = new esri.tasks.QueryTask(lyrSmallDist.url);
+                        //console.log('Origin:      ' + _dindexO + ' ' + valueO);
+                        //console.log('Destination: ' + _dindexD + ' ' + valueD);
+                        
+                        updateFeature.attributes['displayvalue'] = _displayvalue;
+                        updateFeature.attributes['selected'    ] = _selected;
+                        updateFeature.attributes['valuetype'   ] = curVol_Per;
+                        wOD.map.graphics.add(updateFeature);
 
-      var query, updateFeature;
-      query                = new Query();
-      //query.outFields = ["id","displayvalue"];
-      query.outFields = ["*"];
-      //query.returnGeometry = false;
-      query.where          = "id>=1";
+                        if (dom.byId("chkLabels").checked == true) {
 
-      lyrSmallDist.queryFeatures(query,function(featureSet) {
-          //Update values
-          var _totalTrips      = 0;
-          var _totalTrips_base = 0;
-          var resultCount = featureSet.features.length;
-          for (var i = 0; i < resultCount; i++) {
-              updateFeature = featureSet.features[i];
-              var _smalldistid = updateFeature.attributes['id'];
+                            //SOMETIMES CENTER IS OUTSIDE POLYGON :(
+                            //var pnt = updateFeature.geometry.getExtent().getCenter();
 
-              // when trip ends are displayed there is only one field, directionality will be done when querying row
-              if        (curDirection=='O') {
-                  _dindexO = String(curSmallDist).padStart(4, '0') + '_' +  String(_smalldistid).padStart(4, '0');
-                  _dindexD = '';
-              } else if (curDirection=='D') {
-                  _dindexO = '';
-                  _dindexD = String(_smalldistid).padStart(4, '0') + '_' +  String(curSmallDist).padStart(4, '0');
-              } else if (curDirection=='B') {
-                  _dindexO = String(curSmallDist).padStart(4, '0') + '_' +  String(_smalldistid).padStart(4, '0');
-                  _dindexD = String(_smalldistid).padStart(4, '0') + '_' +  String(curSmallDist).padStart(4, '0');
-              } else {
-                  _dindexO = '';
-                  _dindexD = '';
-              }
+                            // get coordinates from json file
+
+                            var _x = labelpoints.find(o => o.id === _smalldistid).Lon;//X_UTM;
+                            var _y = labelpoints.find(o => o.id === _smalldistid).Lat;//Y_UTM;
       
-              valueO  = 0;
-              valueD  = 0;
-              valueOt = 0;
-              valueDt = 0;
+                            _pnt = new Point(new esri.geometry.Point(_x, _y, map.spatialReference));
+                            
+                            var _font  = new Font();
+                            _font.setSize       ("10pt");
+                            _font.setWeight     (Font.WEIGHT_BOLDER);
 
-              // try origin
-              try {
-                  valueO  = odata[_dindexO][_displayfield];
-                  valueOt = odata[_dindexO][_totalfield  ];
-              }
-              catch(err) {
-                  valueO  = 0;
-                  valueOt = 0;
-              }
-              // try destination
-              try {
-                  valueD  = odata[_dindexD][_displayfield];
-                  valueDt = odata[_dindexD][_totalfield  ];
-              }
-              catch(err) {
-                  valueD  = 0;
-                  valueDt = 0;
-              }
-              
-              var _displayvalue = (valueO + valueD);
-              var _totalvalue = (valueOt + valueDt);
-              
-              _totalTrips += _totalvalue;
+                            //var _txtSym = new TextSymbol(_displayvalue);
+                            var _txtSym = new TextSymbol(_labelvalue);
+                            _txtSym.font.setSize("11pt");
+                            _txtSym.font.setFamily("arial");
+                            _txtSym.font.setWeight(Font.WEIGHT_BOLDER);
+                            _txtSym.setHaloColor( new dojo.Color([255,255,255]) );
+                            _txtSym.setHaloSize(2);
+                            //txtSym.setAlign    (esri.symbol.txtSym.ALIGN_START);
 
+                            var _lblGra = new Graphic(_pnt, _txtSym);
+                            wOD.map.graphics.add(_lblGra);
+                        }
 
-              // comparison base values
+                    }
+
                     
-              valueO_base  = 0;
-              valueD_base  = 0;
-              valueOt_base = 0;
-              valueDt_base = 0;
-
-              // try origin
-              try {
-                  valueO_base  = odata_base[_dindexO][_displayfield];
-                  valueOt_base = odata_base[_dindexO][_totalfield  ];
-              }
-              catch(err) {
-                  valueO_base  = 0;
-                  valueOt_base = 0;
-              }
-              // try destination
-              try {
-                  valueD_base  = odata_base[_dindexD][_displayfield];
-                  valueDt_base = odata_base[_dindexD][_totalfield  ];
-              }
-              catch(err) {
-                  valueD_base  = 0;
-                  valueDt_base = 0;
-              }
-              
-              var _displayvalue_base = (valueO_base + valueD_base);
-              var _totalvalue_base = (valueOt_base + valueDt_base);
-              
-              _totalTrips_base += _totalvalue_base;
-
-              // if no base, then this should always just be the current values
-              _displayvalue = _displayvalue - _displayvalue_base;
-              _totalTrips   = _totalvalue - _totalvalue_base;
-
-
-              if (curVol_Per=='V') {
-                  var _labelvalue = _displayvalue.toLocaleString("en-US");
-              } else if (curVol_Per=='P') {
-                  var _labelvalue = parseFloat(_displayvalue*100).toFixed(1)+"%";
-              }
-
-              // if small district is one being selected, set to -1
-              if (dom.byId('chkIntrazonals').checked==false && _smalldistid==curSmallDist) {
-                  _displayvalue = -1000000;
-                  _labelvalue = "";
-                  _selected = "nonintrazonal";
-              } else if (dom.byId('chkIntrazonals').checked==true && _smalldistid==curSmallDist) {
-                  _displayvalue = -1000000;
-                  _selected = "intrazonal";
-              } else {
-                  _selected = "notselected";
-              }
-
-              //console.log('Origin:      ' + _dindexO + ' ' + valueO);
-              //console.log('Destination: ' + _dindexD + ' ' + valueD);
-              
-              updateFeature.attributes['displayvalue'] = _displayvalue;
-              updateFeature.attributes['selected'    ] = _selected;
-              updateFeature.attributes['valuetype'   ] = curVol_Per;
-              wOD.map.graphics.add(updateFeature);
-
-              if (dom.byId("chkLabels").checked == true) {
-
-                  //SOMETIMES CENTER IS OUTSIDE POLYGON :(
-                  //var pnt = updateFeature.geometry.getExtent().getCenter();
-
-                  // get coordinates from json file
-
-                  var _x = labelpoints.find(o => o.id === _smalldistid).Lon;//X_UTM;
-                  var _y = labelpoints.find(o => o.id === _smalldistid).Lat;//Y_UTM;
-
-                  _pnt = new Point(new esri.geometry.Point(_x, _y, map.spatialReference));
-                  
-                  var _font  = new Font();
-                  _font.setSize       ("10pt");
-                  _font.setWeight     (Font.WEIGHT_BOLDER);
-
-                  //var _txtSym = new TextSymbol(_displayvalue);
-                  var _txtSym = new TextSymbol(_labelvalue);
-                  _txtSym.font.setSize("11pt");
-                  _txtSym.font.setFamily("arial");
-                  _txtSym.font.setWeight(Font.WEIGHT_BOLDER);
-                  _txtSym.setHaloColor( new dojo.Color([255,255,255]) );
-                  _txtSym.setHaloSize(2);
-                  //txtSym.setAlign    (esri.symbol.txtSym.ALIGN_START);
-
-                  var _lblGra = new Graphic(_pnt, _txtSym);
-                  wOD.map.graphics.add(_lblGra);
-              }
-
-          }
-
-          
-          if (curGeo=='centertosmalldist') {
-              console.log(curCenter);
-              //_lyr = lyrCenters;
-          } else if (curGeo=='smalldist') {
-              console.log('smalldist');
-              //_lyr = lyrSmallDist;
-          }
-
-          if (typeof bindata !== 'undefined') {
-      
-              // create renderer for display layers
-              var _defaultLine  =  new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 255, 255, 0.7]), 4.0)
-              var _selectedLine =  new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 255,   0, 0.7]), 4.0)
-          
-              // initialize renderer with field name for current bin based on current area
-              var _Rndr = new ClassBreaksRenderer(null, 'displayvalue');
-              
-              for (var i=0; i<=9; i++) {
-                if (curYear_Base=='') { // no base year for comparison
-                  _id = curVol_Per + '_' + i.toString();
-                } else {
-                  _id = curVol_Per + '_' + i.toString() + '_C';
-                } 
-                _Rndr.addBreak({minValue: bindata[_id].minValue, maxValue: bindata[_id].maxValue,   symbol: new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, _defaultLine, Color.fromHex(bindata[_id].Color)), label: bindata[_id].Description});
-              }
-                  
+                    if (curGeo=='centertosmalldist') {
+                        console.log(curCenter);
+                        //_lyr = lyrCenters;
+                    } else if (curGeo=='smalldist') {
+                        console.log('smalldist');
+                        //_lyr = lyrSmallDist;
+                    }
+            
+                    if (typeof bindata !== 'undefined') {
+                
+                        // create renderer for display layers
+                        var _defaultLine  =  new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 255, 255, 0.7]), 4.0)
+                        var _selectedLine =  new SimpleLineSymbol(SimpleLineSymbol.STYLE_SOLID, new Color([255, 255,   0, 0.7]), 4.0)
+                    
+                        // initialize renderer with field name for current bin based on current area
+                        var _Rndr = new ClassBreaksRenderer(null, 'displayvalue');
+                        
+                        for (var i=0; i<=9; i++) {
+                            _id = curVol_Per + '_' + i.toString();
+                            _Rndr.addBreak({minValue: bindata[_id].minValue, maxValue: bindata[_id].maxValue,   symbol: new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, _defaultLine, Color.fromHex(bindata[_id].Color)), label: bindata[_id].Description});
+                        }
+                    
 //                      var _uvUniqueValueRenderer = new UniqueValueRenderer({
 //                        type: "unique-value",  // autocasts as new UniqueValueRenderer()
 //                        valueExpression: 'var v    = $feature["displayvalue"];' +
@@ -1430,30 +1373,38 @@ function(declare, BaseWidget, LayerInfos, registry, dom, domStyle, dijit, PanelM
 //                                           {value:"class_nV9", symbol: new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, _selectedLine, Color.fromHex("#FFFF00")), label: "class_nV9"}]
 //                        });
 
-            wOD._changeZoom();
-            dom.byId("opa").innerHTML = ((curOpacity)*100).toFixed(0) + "%"
-            wOD.map.graphics.setRenderer(_Rndr);
-            wOD.map.graphics.setOpacity(1-curOpacity);
-            wOD.map.graphics.refresh();
-        }
+                        wOD._changeZoom();
+                        dom.byId("opa").innerHTML = ((curOpacity)*100).toFixed(0) + "%"
+                        wOD.map.graphics.setRenderer(_Rndr);
+                        wOD.map.graphics.setOpacity(1-curOpacity);
+                        wOD.map.graphics.refresh();
+                    }
+          
+                    lyrSmallDist.hide();
 
-        lyrSmallDist.hide();
+                    if (daytype.length>0 && season.length>0 && daypart.length>0) {
+                      _curDayType = daytype.filter( function(daytype){return (daytype['value']==curDayType);} );
+                      _curSeason = season.filter( function(season){return (season['value']==curSeason);} );
+                      _curDayPart = daypart.filter( function(daypart){return (daypart['value']==curDayPart);} );
+              
+                      dom.byId("TOTALTRIPSNAME").innerHTML = dModes.find(o => o.value === curMode).label + ' Average Trip Count<br/>for ' + dDirections.find(o => o.value === curDirection).highlighted;
+                      dom.byId("TOTALTRIPSFINE").innerHTML = '<small>' + _curDayType[0]['label'] + ' - ' + _curDayPart[0]['label'] + ' - ' + curYear + ' ' + _curSeason[0]['label'] + '</small>';
+                      dom.byId("TOTALTRIPS").innerHTML = '<strong>' + wOD._numberWithCommas(_totalTrips) + '</strong>';
+                    }
 
-        if (daytype.length>0 && season.length>0 && daypart.length>0) {
-          _curDayType = daytype.filter( function(daytype){return (daytype['value']==curDayType);} );
-          _curSeason = season.filter( function(season){return (season['value']==curSeason);} );
-          _curDayPart = daypart.filter( function(daypart){return (daypart['value']==curDayPart);} );
-  
-          dom.byId("TOTALTRIPSNAME").innerHTML = dModes.find(o => o.value === curMode).label + ' Average Trip Count<br/>for ' + dDirections.find(o => o.value === curDirection).highlighted;
-          dom.byId("TOTALTRIPSFINE").innerHTML = '<small>' + _curDayType[0]['label'] + ' - ' + _curDayPart[0]['label'] + ' - ' + curYear + ' ' + _curSeason[0]['label'] + '</small>';
-          dom.byId("TOTALTRIPS").innerHTML = '<strong>' + wOD._numberWithCommas(_totalTrips) + '</strong>';
-        }
+                    wOD._getTrendData_Mon();
+                    wOD._getTrendData_TOD();
 
-        wOD._getTrendData_Mon();
-        wOD._getTrendData_TOD();
+                    console.log('Display updated');
+                });
+            },
+            error: function(err) {
+                /* this will execute if the response couldn't be converted to a JS object,
+                    or if the request was unsuccessful altogether. */
+            }
+        });
 
-        console.log('Display updated');
-      });
+        
     },
     
     _setLegendBar: function() {
@@ -1612,36 +1563,6 @@ function(declare, BaseWidget, LayerInfos, registry, dom, domStyle, dijit, PanelM
       
     },
 
-    _setCompare: function() {
-      console.log('_setCompare');
-
-      curMode_Base      = curMode;
-      curYear_Base      = curYear;
-      curDayType_Base   = curDayType;
-      curDayPart_Base   = curDayPart;
-      curSeason_Base    = curSeason;
-      curDirection_Base = curDirection;
-      lyrDispLayer_Base = lyrDispLayer;
-      odata_base        = odata;
-
-      wOD._updateDisplay();
-    },
-
-    _clearCompare: function() {
-      console.log('_clearCompare');
-
-      curMode_Base      = '';
-      curYear_Base      = '';
-      curDayType_Base   = '';
-      curDayPart_Base   = '';
-      curSeason_Base    = '';
-      curDirection_Base = '';
-      lyrDispLayer_Base = [];
-      odata_base        = [];
-
-      wOD._updateDisplay();
-    },
-
     //Run onOpen when receiving a message from OremLayerSymbology
     onReceiveData: function(name, widgetId, data, historyData) {
       console.log('onReceiveData');
@@ -1656,5 +1577,7 @@ function(declare, BaseWidget, LayerInfos, registry, dom, domStyle, dijit, PanelM
       
     }
     
+
+        
   });
 });
