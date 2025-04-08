@@ -1,4 +1,4 @@
-date_range,data_range_extents
+date_range_name,data_ranges
 2019_01,"[{'start_date': '01/01/2019', 'end_date': '01/31/2019'}]"
 2019_02,"[{'start_date': '02/01/2019', 'end_date': '02/28/2019'}]"
 2019_03,"[{'start_date': '03/01/2019', 'end_date': '03/31/2019'}]"
